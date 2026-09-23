@@ -19,7 +19,7 @@ run "small_private" {
   }
   assert {
     condition     = module.site.resource.body.properties.outboundVnetRouting.allTraffic && module.site.resource.body.properties.virtualNetworkSubnetId == var.integration_subnet_resource_id
-    error_message = "Outbound VNet routing and integration must be enforced."
+    error_message = "The site must use the integration subnet and route outbound traffic through the VNet."
   }
   assert {
     condition     = module.site.resource.body.properties.siteConfig.linuxFxVersion == "NODE|24-lts" && module.site.resource.body.properties.siteConfig.appCommandLine == "node server.js"
@@ -27,7 +27,7 @@ run "small_private" {
   }
   assert {
     condition     = length(module.site.private_endpoints) == 1 && module.site.resource.body.properties.siteConfig.ftpsState == "Disabled"
-    error_message = "A private endpoint and disabled FTP are mandatory."
+    error_message = "The site must have a private endpoint and FTP disabled."
   }
 }
 run "medium_private" {

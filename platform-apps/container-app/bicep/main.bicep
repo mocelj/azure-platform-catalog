@@ -12,13 +12,13 @@ param size string = 'small'
 
 param logAnalyticsWorkspaceResourceId string
 
-@description('Platform-owned metadata; mandatory catalog tags cannot be overridden.')
+@description('Additional resource tags. The wrapper retains the required catalog tags.')
 param tags object = {}
 
 param privateEndpointSubnetResourceId string
 param privateDnsZoneResourceId string
 
-@description('Dedicated Microsoft.App/environments delegated workload-profiles infrastructure subnet.')
+@description('Infrastructure subnet for the workload-profiles environment, delegated to Microsoft.App/environments.')
 param infrastructureSubnetResourceId string
 
 var platformTags = union(tags, {
@@ -50,7 +50,7 @@ module environment 'br/public:avm/res/app/managed-environment:0.16.0' = {
     tags: platformTags
     enableTelemetry: false
     infrastructureSubnetResourceId: infrastructureSubnetResourceId
-    // Private Link, not an internal-only environment: public ingress is explicitly disabled.
+    // This environment uses Private Link for inbound access, with public access disabled.
     internal: false
     publicNetworkAccess: 'Disabled'
     zoneRedundant: false

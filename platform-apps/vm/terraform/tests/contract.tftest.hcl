@@ -20,7 +20,7 @@ run "small_private" {
   }
   assert {
     condition     = module.vm.resource.secure_boot_enabled && module.vm.resource.vtpm_enabled && module.vm.resource.encryption_at_host_enabled
-    error_message = "The actual VM plan must retain the approved security controls."
+    error_message = "The VM plan must enable Secure Boot, vTPM and encryption at host."
   }
   assert {
     condition     = module.vm.resource.source_image_reference[0].version == "24.04.202609040" && module.vm.resource.size == "Standard_D2as_v5"

@@ -1,6 +1,6 @@
 targetScope = 'resourceGroup'
 
-@description('Platform application name. Azure storage naming is derived deterministically.')
+@description('Application name used to derive the storage account name.')
 @minLength(3)
 @maxLength(20)
 param name string
@@ -11,10 +11,10 @@ param location string = 'swedencentral'
 @allowed(['small', 'medium'])
 param size string = 'small'
 
-@description('Platform-owned Log Analytics workspace resource ID.')
+@description('Resource ID of the shared Log Analytics workspace.')
 param logAnalyticsWorkspaceResourceId string
 
-@description('Platform-owned metadata; mandatory catalog tags cannot be overridden.')
+@description('Additional resource tags. The wrapper retains the required catalog tags.')
 param tags object = {}
 
 param privateEndpointSubnetResourceId string

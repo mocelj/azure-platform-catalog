@@ -10,8 +10,8 @@ try {
   if (enabled) await fetchConsumer(process.env.CONSUMER_SHA, process.env.TARGET, process.env.GH_TOKEN);
   appendFileSync(process.env.GITHUB_OUTPUT, `enabled=${enabled}\n`);
   const message = enabled
-    ? 'Reviewed consumer configuration verified. Only catalog code can enter connected execution.'
-    : 'Azure-connected execution is NOT CONFIGURED / NOT RUN. Set the documented prerequisites before enabling it.';
+    ? 'Application configuration verified. The catalog workflow can proceed to the Azure step.'
+    : 'Azure execution is disabled; no plan or deployment was run. Complete the environment setup before enabling it.';
   console.log(message);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${message}\n`);
 } catch (error) {

@@ -9,7 +9,7 @@ export function verifyFoundation(snapshot) {
   const storage = snapshot.storage;
   if (storage.publicNetworkAccess !== 'Disabled' || storage.allowSharedKeyAccess !== false || storage.allowBlobPublicAccess !== false ||
       storage.enableHttpsTrafficOnly !== true || storage.minimumTlsVersion !== 'TLS1_2') {
-    throw new Error('Existing state storage does not meet the private, Entra-only, HTTPS/TLS contract.');
+    throw new Error('The state storage account needs public access and Shared Key disabled, HTTPS enabled, and TLS 1.2.');
   }
   if (!(storage.privateEndpointConnections ?? []).some((connection) => connection.privateLinkServiceConnectionState?.status === 'Approved')) {
     throw new Error('State storage has no approved private endpoint connection.');
@@ -23,11 +23,11 @@ export function verifyFoundation(snapshot) {
   if (snapshot.subnets.vm.defaultOutboundAccess !== false) throw new Error('VM subnet must disable implicit default outbound access.');
   for (const name of ['vm', 'webApp', 'containerAppBicep', 'containerAppTerraform']) {
     const subnet = snapshot.subnets[name];
-    if (!subnet.natGateway?.id && !subnet.routeTable?.id) throw new Error(`No explicit NAT or approved routing attachment for ${name}.`);
+    if (!subnet.natGateway?.id && !subnet.routeTable?.id) throw new Error(`No NAT Gateway or route table is attached to ${name}.`);
   }
   if (snapshot.image.hyperVGeneration !== 'V2' || snapshot.image.architecture !== 'x64' ||
       !(snapshot.image.features ?? []).some((feature) => feature.name === 'SecurityType' && feature.value.includes('TrustedLaunch'))) {
-    throw new Error('The pinned VM image does not meet the generation/architecture/Trusted Launch contract.');
+    throw new Error('The VM image must support x64, Generation 2 and Trusted Launch.');
   }
   if (!snapshot.dnsAddresses.length || snapshot.dnsAddresses.some((ip) => !/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|f[cd][0-9a-f]{2}:)/i.test(ip))) {
     throw new Error('The state Blob hostname must resolve exclusively to private addresses from this runner.');
@@ -47,7 +47,7 @@ export async function preflight(environment, diagnosticsFile, { checkImage = tru
     const result = spawnSync(cli, arguments_, { shell: windows, encoding: 'utf8', timeout: 120_000, maxBuffer: 8 * 1024 * 1024 });
     if (result.error || result.status !== 0) {
       if (diagnosticsFile) appendFileSync(diagnosticsFile, `${result.error?.message ?? ''}\n${result.stderr ?? ''}\n`, { mode: 0o600 });
-      throw new Error('Read-only foundation preflight failed; inspect private diagnostics and the documented Azure prerequisites.');
+      throw new Error('A foundation preflight query failed. Check the runner diagnostics, Azure permissions and resource IDs.');
     }
     return JSON.parse(result.stdout);
   }
@@ -79,7 +79,7 @@ if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.m
       throw new Error('Usage: node scripts/preflight.mjs --environment PRIVATE_FILE --live (read-only Azure queries; no provisioning)');
     }
     await preflight(readJson(resolve(process.argv[3])));
-    console.log('Read-only foundation properties, image metadata and private state DNS passed. This does not prove runtime workload connectivity or quota.');
+    console.log('Foundation settings, image metadata and private state DNS checks passed. Workload connectivity and available quota still need to be checked.');
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;

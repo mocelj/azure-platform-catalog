@@ -19,7 +19,7 @@ run "small_private" {
   }
   assert {
     condition     = module.storage.resource.body.properties.minimumTlsVersion == "TLS1_2" && module.storage.resource.body.properties.allowBlobPublicAccess == false
-    error_message = "TLS and anonymous-access policy must be enforced in the actual AVM resource plan."
+    error_message = "The storage plan must require TLS 1.2 and disable anonymous Blob access."
   }
   assert {
     condition     = length(module.storage.private_endpoints) == 1 && module.storage.resource.body.sku.name == "Standard_LRS"

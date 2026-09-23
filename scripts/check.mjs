@@ -21,7 +21,7 @@ export function inspectSource(path, original, base = root) {
   const errors = [];
   const text = withoutComments(original);
   if (/\.bicep$/.test(path)) {
-    if (/^\s*resource\s+\w+\s+/m.test(text)) errors.push('First-party Bicep resource declarations are forbidden; compose AVM.');
+    if (/^\s*resource\s+\w+\s+/m.test(text)) errors.push('Use an AVM module instead of declaring a Bicep resource in the catalog.');
     for (const match of text.matchAll(/\bmodule\s+\w+\s+'([^']+)'/g)) {
       const source = match[1];
       if (source.startsWith('br/')) {
@@ -34,13 +34,13 @@ export function inspectSource(path, original, base = root) {
     }
   }
   if (/\.tf$/.test(path)) {
-    if (/^\s*(resource|provisioner)\s+"/m.test(text)) errors.push('First-party Terraform resources/provisioners are forbidden; compose AVM.');
+    if (/^\s*(resource|provisioner)\s+"/m.test(text)) errors.push('Use an AVM module instead of defining Terraform resources or provisioners in the catalog.');
     for (const match of text.matchAll(/\bdata\s+"([^"]+)"/g)) {
       if (!['azapi_client_config', 'azurerm_client_config', 'azurerm_subscription'].includes(match[1])) errors.push(`Unapproved read-only lookup: ${match[1]}`);
     }
     for (const block of terraformModules(text)) {
       const source = block.match(/(?:^|\n)\s*source\s*=\s*"([^"]+)"/)?.[1];
-      if (!source) { errors.push('Module source must be a literal approved reference.'); continue; }
+      if (!source) { errors.push('Specify the AVM source as a literal module reference.'); continue; }
       if (source.startsWith('.')) {
         const traversal = relative(base, resolve(dirname(path), source));
         if (traversal.startsWith('..') || isAbsolute(traversal)) errors.push('Local Terraform module must remain inside the catalog.');
@@ -81,7 +81,7 @@ export function inspectWorkflow(text) {
   const workflow = parse(text);
   const errors = [];
   const triggers = workflow.on ?? {};
-  if ('pull_request_target' in triggers || 'workflow_run' in triggers) errors.push('Privileged PR chaining is prohibited.');
+  if ('pull_request_target' in triggers || 'workflow_run' in triggers) errors.push('These workflows do not support pull_request_target or workflow_run triggers, which can give PR code elevated access.');
   for (const job of Object.values(workflow.jobs ?? {})) {
     if (job.uses && !job.uses.startsWith('./') && !/@[0-9a-f]{40}$/.test(job.uses)) errors.push('Reusable workflow reference must use a full commit SHA.');
     for (const step of job.steps ?? []) {
@@ -89,8 +89,8 @@ export function inspectWorkflow(text) {
       if (step.run && /\$\{\{\s*(inputs|github\.event)/.test(step.run)) errors.push('Untrusted expression interpolated into a shell script.');
     }
     const isPrivate = JSON.stringify(job['runs-on'] ?? '').includes('self-hosted');
-    if (isPrivate && !('workflow_dispatch' in triggers)) errors.push('Private runner permitted only on explicit maintainer dispatch.');
-    if (isPrivate && !job.environment) errors.push('Private execution needs a protected GitHub Environment.');
+    if (isPrivate && !('workflow_dispatch' in triggers)) errors.push('Use workflow_dispatch for jobs on the private runner.');
+    if (isPrivate && !job.environment) errors.push('Assign a protected GitHub Environment to the private-runner job.');
   }
   return errors;
 }
@@ -112,7 +112,7 @@ export function check() {
   const toolchain = readJson(join(root, 'catalog', 'toolchain.json'));
   if (process.versions.node !== toolchain.node) failures.push(`Expected Node ${toolchain.node}, found ${process.versions.node}`);
   if (failures.length) throw new Error(failures.join('\n'));
-  console.log('Catalog source, version and workflow boundaries passed. No Azure operation was performed.');
+  console.log('Catalog source, dependency pins and workflow checks passed.');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === join(root, 'scripts', 'check.mjs')) {

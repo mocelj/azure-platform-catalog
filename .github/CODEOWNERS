@@ -1,4 +1,4 @@
-# Review routing only; configure repository rules to enforce protection.
+# CODEOWNERS routes reviews; branch protection enforces the review requirements.
 * @mocelj
 /.github/ @mocelj
 /bootstrap/ @mocelj

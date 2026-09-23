@@ -1,5 +1,5 @@
 output "resource_id" {
-  description = "Private virtual machine resource ID."
+  description = "Virtual machine resource ID."
   value       = module.vm.resource_id
 }
 
@@ -14,6 +14,6 @@ output "private_ip_address" {
 }
 
 output "system_assigned_mi_principal_id" {
-  description = "System-assigned identity principal ID; not a credential."
+  description = "Principal ID of the VM's system-assigned managed identity."
   value       = module.vm.system_assigned_mi_principal_id
 }

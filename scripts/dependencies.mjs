@@ -52,7 +52,7 @@ export function inspectDependencies(services = catalog.services) {
         remoteModules.push({
           source: item.Source, version: item.Version,
           registry: `https://registry.terraform.io/modules/${registrySource}/${item.Version}`,
-          sourceSha256: hash(files), hashScope: 'Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories'
+          sourceSha256: hash(files), hashScope: 'Hashes cover sorted .tf paths and contents with LF line endings. Tests, examples and tooling directories are excluded.'
         });
       }
     }
@@ -62,11 +62,11 @@ export function inspectDependencies(services = catalog.services) {
     schemaVersion: '1.0',
     terraform: '1.13.5',
     providerVersions: readJson(join(root, 'catalog', 'toolchain.json')).providers,
-    apiNote: 'AzAPI API versions are inventoried from the selected .tf closure. AzureRM API choices are fixed by the exact provider release, not a configurable module parameter.',
+    apiNote: 'AzAPI versions come from the selected modules and their dependencies. AzureRM selects API versions internally; pinning the provider fixes those choices.',
     validation: {
       azureDeployment: 'Not performed',
-      containerAppMocking: 'Terraform 1.13.5 cannot mock the selected environment module ephemeral resource schema, including count-zero resources. Source-contract checks and terraform validate apply; no provider-mocked or live environment coverage is claimed.',
-      vmProviderWarnings: 'Upstream AzureRM metric and vm_agent_platform_updates_enabled deprecations; supported by the pinned AzureRM 4.81.0. No upstream source modified.'
+      containerAppMocking: 'Terraform 1.13.5 cannot mock the environment module ephemeral resource schema, even at count zero. This root has source assertions and terraform validate checks, but no mocked plan or live deployment coverage.',
+      vmProviderWarnings: 'The VM module uses metric and vm_agent_platform_updates_enabled attributes that AzureRM marks as deprecated. They remain supported in the pinned 4.81.0 provider; upstream code is unchanged.'
     },
     roots
   };
@@ -80,12 +80,12 @@ try {
   const manifest = join(root, 'catalog', 'terraform-dependencies.json');
   if (process.argv[2] === '--record') {
     writeFileSync(manifest, `${JSON.stringify(actual, null, 2)}\n`);
-    console.log('Recorded reviewed module closure, normalized source hashes and API versions. Commit this file only after reviewing dependency changes.');
+    console.log('Recorded module versions, source hashes and API versions. Review the manifest diff before committing it.');
   } else if (process.argv.length === 2 || process.argv[2] === '--check') {
     const expected = readJson(manifest);
     if (requestedService) expected.roots = { [requestedService]: expected.roots[requestedService] };
-    if (hash(actual) !== hash(expected)) throw new Error('Module source/version/API closure differs from the reviewed release manifest.');
-    console.log('Terraform dependency sources, exact versions, content hashes and API inventory match the release.');
+    if (hash(actual) !== hash(expected)) throw new Error('Module sources, versions or API inventory differ from the release manifest.');
+    console.log('Terraform module versions, source hashes and API inventory match the release manifest.');
   } else throw new Error('Usage: node scripts/dependencies.mjs [--check|--record]');
 } catch (error) {
   console.error(error.message);

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:avm-demo:environment:1.0",
-  "title": "Platform-owned environment binding (never developer input)",
+  "title": "Environment configuration maintained by the platform team",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "location", "subscriptionId", "resourceGroups", "network", "privateDnsZones", "logAnalyticsWorkspaceResourceId", "state", "sshPublicKey"],

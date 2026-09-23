@@ -12,13 +12,13 @@ param size string = 'small'
 
 param logAnalyticsWorkspaceResourceId string
 
-@description('Platform-owned metadata; mandatory catalog tags cannot be overridden.')
+@description('Additional resource tags. The wrapper retains the required catalog tags.')
 param tags object = {}
 
 param privateEndpointSubnetResourceId string
 param privateDnsZoneResourceId string
 
-@description('Dedicated Microsoft.Web/serverFarms delegated subnet, separate from the private endpoint subnet.')
+@description('Subnet for outbound VNet integration, delegated to Microsoft.Web/serverFarms. Use a different subnet for the private endpoint.')
 param integrationSubnetResourceId string
 
 var platformTags = union(tags, {
