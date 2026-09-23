@@ -1,0 +1,10 @@
+# Review routing only; configure repository rules to enforce protection.
+* @mocelj
+/.github/ @mocelj
+/bootstrap/ @mocelj
+/platform-apps/ @mocelj
+/catalog/ @mocelj
+/schemas/ @mocelj
+/environments/ @mocelj
+/scripts/ @mocelj
+/tests/ @mocelj

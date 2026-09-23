@@ -1,0 +1,85 @@
+name: Catalog plan or apply (disabled until configured)
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Plan first; apply only a reviewed saved plan
+        type: choice
+        options: [plan, apply]
+        required: true
+      target:
+        type: choice
+        options: [storage-bicep, storage-terraform, vm-bicep, vm-terraform, web-app-bicep, web-app-terraform, container-app-bicep, container-app-terraform]
+        required: true
+      consumer_sha:
+        description: Exact 40-character consumer commit already merged into main
+        type: string
+        required: true
+      plan_id:
+        description: Apply only; numeric run_attempt ID printed by a successful plan
+        type: string
+        required: false
+permissions:
+  contents: read
+concurrency:
+  group: platform-${{ inputs.target }}
+  cancel-in-progress: false
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    outputs:
+      enabled: ${{ steps.gate.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.18.0
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - id: gate
+        run: node scripts/dispatch-gate.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPERATION: ${{ inputs.operation }}
+          TARGET: ${{ inputs.target }}
+          CONSUMER_SHA: ${{ inputs.consumer_sha }}
+          PLAN_ID: ${{ inputs.plan_id }}
+          ENABLE_AZURE_DEPLOYMENT: ${{ vars.ENABLE_AZURE_DEPLOYMENT }}
+  connected:
+    needs: gate
+    if: needs.gate.outputs.enabled == 'true'
+    runs-on: [self-hosted, linux, x64, platform-demo-private]
+    environment: ${{ inputs.operation == 'apply' && 'demo-apply' || 'demo-plan' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.18.0
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node scripts/tooling.mjs
+      - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: node scripts/connected.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPERATION: ${{ inputs.operation }}
+          TARGET: ${{ inputs.target }}
+          CONSUMER_SHA: ${{ inputs.consumer_sha }}
+          PLAN_ID: ${{ inputs.plan_id }}
+          ENABLE_AZURE_DEPLOYMENT: ${{ vars.ENABLE_AZURE_DEPLOYMENT }}
+          PLATFORM_ENVIRONMENT_JSON: ${{ secrets.PLATFORM_ENVIRONMENT_JSON }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Remove this run's local cloud material
+        if: always()
+        run: node scripts/cleanup-run.mjs

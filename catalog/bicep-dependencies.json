@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "1.0",
+  "scope": "Four workload wrappers. Shared foundation dependencies are documented separately by its owner.",
+  "bicepVersion": "0.47.16",
+  "sourceRepository": "https://github.com/Azure/bicep-registry-modules",
+  "sourceVerification": "Parameters and nested-module schemas inspected at the exact upstream release tags below; compilation uses their version-pinned br/public OCI artifacts. No moving main branch is used.",
+  "resourceOwnership": "Every Azure resource is declared by upstream AVM. First-party wrappers contain only parameters, variables, AVM module calls and non-secret resource-ID/name outputs.",
+  "apiInventoryScope": "APIs observed in pinned upstream source. Optional AVM features may include additional nested APIs even when disabled; presence in a compiled artifact does not prove deployment.",
+  "modules": [
+    {
+      "workload": "storage",
+      "module": "avm/res/storage/storage-account",
+      "version": "0.33.1",
+      "registry": "br/public:avm/res/storage/storage-account:0.33.1",
+      "sourceRelease": "https://github.com/Azure/bicep-registry-modules/releases/tag/avm/res/storage/storage-account/0.33.1",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/storage/storage-account/0.33.1/avm/res/storage/storage-account/main.bicep",
+      "resourceApis": [
+        "Microsoft.Storage/storageAccounts@2025-06-01",
+        "Microsoft.Storage/storageAccounts/blobServices@2025-01-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+      ],
+      "upstreamPinnedModules": [
+        "br/public:avm/res/network/private-endpoint:0.11.1",
+        "br/public:avm/utl/types/avm-common-types:0.6.1"
+      ],
+      "notes": [
+        "Blob diagnostics, retention and private endpoint are native module inputs.",
+        "Upstream storage module declares secure access-key/connection-string outputs. Wrapper never references or re-exports them; Shared Key authorization is disabled."
+      ]
+    },
+    {
+      "workload": "vm",
+      "module": "avm/res/compute/virtual-machine",
+      "version": "0.22.3",
+      "registry": "br/public:avm/res/compute/virtual-machine:0.22.3",
+      "sourceRelease": "https://github.com/Azure/bicep-registry-modules/releases/tag/avm/res/compute/virtual-machine/0.22.3",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/compute/virtual-machine/0.22.3/avm/res/compute/virtual-machine/main.bicep",
+      "resourceApis": [
+        "Microsoft.Compute/virtualMachines@2025-11-01",
+        "Microsoft.Compute/disks@2025-01-02"
+      ],
+      "upstreamPinnedModules": [
+        "br/public:avm/res/network/network-interface:0.5.3",
+        "br/public:avm/res/network/public-ip-address:0.12.0",
+        "br/public:avm/utl/types/avm-common-types:0.7.0",
+        "br/public:avm/utl/types/avm-common-types:0.6.1"
+      ],
+      "notes": [
+        "The optional upstream public-IP module is disabled because no pipConfiguration is supplied.",
+        "The VM AVM has no top-level diagnosticSettings input. Native NIC AllMetrics diagnostics target the provided workspace; boot diagnostics are managed separately. Guest logs/guest performance are not configured and must not be claimed.",
+        "The upstream publicNetworkAccess/networkAccessPolicy parameters govern AVM-managed data disks, not the implicit VM OS disk. No data disks are created by this wrapper; do not claim these parameters disable OS disk export."
+      ]
+    },
+    {
+      "workload": "web-app",
+      "module": "avm/res/web/serverfarm",
+      "version": "0.7.0",
+      "registry": "br/public:avm/res/web/serverfarm:0.7.0",
+      "sourceRelease": "https://github.com/Azure/bicep-registry-modules/releases/tag/avm/res/web/serverfarm/0.7.0",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/web/serverfarm/0.7.0/avm/res/web/serverfarm/main.bicep",
+      "resourceApis": [
+        "Microsoft.Web/serverfarms@2025-03-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+      ],
+      "upstreamPinnedModules": [
+        "br/public:avm/utl/types/avm-common-types:0.6.1"
+      ]
+    },
+    {
+      "workload": "web-app",
+      "module": "avm/res/web/site",
+      "version": "0.24.0",
+      "registry": "br/public:avm/res/web/site:0.24.0",
+      "sourceRelease": "https://github.com/Azure/bicep-registry-modules/releases/tag/avm/res/web/site/0.24.0",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/web/site/0.24.0/avm/res/web/site/main.bicep",
+      "resourceApis": [
+        "Microsoft.Web/sites@2025-03-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+      ],
+      "upstreamPinnedModules": [
+        "br/public:avm/res/network/private-endpoint:0.12.0",
+        "br/public:avm/utl/types/avm-common-types:0.6.1"
+      ],
+      "notes": [
+        "NODE|24-lts is an Azure-managed patch channel, not an exact Node executable pin.",
+        "Inbound Private Link and outbound VNet integration use separate platform-owned subnets."
+      ]
+    },
+    {
+      "workload": "container-app",
+      "module": "avm/res/app/managed-environment",
+      "version": "0.16.0",
+      "registry": "br/public:avm/res/app/managed-environment:0.16.0",
+      "sourceRelease": "https://github.com/Azure/bicep-registry-modules/releases/tag/avm/res/app/managed-environment/0.16.0",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/app/managed-environment/0.16.0/avm/res/app/managed-environment/main.bicep",
+      "resourceApis": [
+        "Microsoft.App/managedEnvironments@2026-01-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview",
+        "Microsoft.Network/privateEndpoints@2025-05-01"
+      ],
+      "upstreamPinnedModules": [
+        "br/public:avm/res/network/private-endpoint:0.12.1",
+        "br/public:avm/utl/types/avm-common-types:0.7.0"
+      ],
+      "notes": [
+        "Integrated privateEndpoints input targets the managedEnvironments group; not an internal-only environment.",
+        "azure-monitor log destination avoids workspace shared-key reads; diagnostics provide the workspace binding."
+      ]
+    },
+    {
+      "workload": "container-app",
+      "module": "avm/res/app/container-app",
+      "version": "0.23.0",
+      "registry": "br/public:avm/res/app/container-app:0.23.0",
+      "sourceRelease": "https://github.com/Azure/bicep-registry-modules/releases/tag/avm/res/app/container-app/0.23.0",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/app/container-app/0.23.0/avm/res/app/container-app/main.bicep",
+      "resourceApis": [
+        "Microsoft.App/containerApps@2026-01-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+      ],
+      "upstreamPinnedModules": [
+        "br/public:avm/utl/types/avm-common-types:0.6.1"
+      ],
+      "notes": [
+        "Container image digest and port are compile-time values from catalog/platform.json; not developer inputs.",
+        "External app ingress permits private callers outside the environment while environment public network access stays disabled."
+      ]
+    }
+  ],
+  "previewApis": [
+    {
+      "resourceType": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "reason": "Pinned upstream AVM diagnostic-setting implementations use this API. Accepted only as the explicitly documented demo exception; do not silently substitute a moving API."
+    }
+  ],
+  "vmImage": {
+    "publisher": "Canonical",
+    "offer": "ubuntu-24_04-lts",
+    "sku": "server",
+    "version": "24.04.202609040",
+    "location": "swedencentral",
+    "verification": "Parent verified this exact version exists through the read-only Microsoft.Compute locations/publishers/Canonical/artifacttypes/vmimage/offers/ubuntu-24_04-lts/skus/server/versions endpoint, api-version=2024-03-01, in swedencentral. No deployment performed.",
+    "compatibilityVerification": "Parent verified exact image metadata read-only: architecture x64, hyperVGeneration V2, SecurityType=TrustedLaunchSupported, accelerated networking supported, Linux OS disk 30 GiB.",
+    "architecture": "x64",
+    "hyperVGeneration": "V2",
+    "securityType": "TrustedLaunchSupported",
+    "imageOsDiskSizeGiB": 30
+  },
+  "validation": {
+    "contractTestCommand": "node --test tests/bicep-workloads.test.mjs",
+    "contractTestsPassed": 13,
+    "pinnedCompilerBuildVerified": true,
+    "verifiedOn": "2026-09-23",
+    "compilerVersion": "0.47.16.16243",
+    "compilerBinarySha256": "657e6aacc4e44d73674874f802d98396bf5e2e23530d160f275fbf9d67b7fde7",
+    "restoredWorkloadRoots": 4,
+    "compiledWorkloadRoots": 4,
+    "compiledParameterFiles": 4,
+    "compilerWarnings": 0,
+    "compilerErrors": 0,
+    "compiledInterfaceChecks": "All four compiled templates and example parameter files match implementation-contract.json exactly; Sweden Central and small/medium enums, disabled telemetry and module-only resource boundaries verified.",
+    "compiledPreviewApiVersions": [
+      "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+    ],
+    "compiledApiInventoryNotes": "Recursively inspected all four restored template closures, including inactive optional AVM branches. No additional preview APIs found. Generated templates were removed after local validation; repeat builds in CI for each release.",
+    "liveDeployed": false,
+    "whatIfExecuted": false,
+    "runtimeVerified": false
+  }
+}

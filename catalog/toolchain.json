@@ -1,0 +1,16 @@
+{
+  "node": "24.18.0",
+  "npm": "11.16.0",
+  "azureCli": "2.88.0",
+  "bicep": "0.47.16",
+  "terraform": "1.13.5",
+  "runner": "ubuntu-24.04",
+  "providers": {
+    "hashicorp/azurerm": "4.81.0",
+    "Azure/azapi": "2.12.0",
+    "Azure/modtm": "0.3.5",
+    "hashicorp/random": "3.9.1",
+    "hashicorp/time": "0.14.2",
+    "hashicorp/tls": "4.4.1"
+  }
+}

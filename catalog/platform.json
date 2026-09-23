@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "catalogVersion": "0.1.0",
+  "consumerRepository": "mocelj/azure-platform-app-demo",
+  "environment": "demo",
+  "location": "swedencentral",
+  "services": ["storage", "vm", "web-app", "container-app"],
+  "engines": ["bicep", "terraform"],
+  "sizes": ["small", "medium"],
+  "targets": [
+    "storage-bicep", "storage-terraform",
+    "vm-bicep", "vm-terraform",
+    "web-app-bicep", "web-app-terraform",
+    "container-app-bicep", "container-app-terraform"
+  ],
+  "containerImage": "mcr.microsoft.com/azuredocs/containerapps-helloworld@sha256:e9b3e7c34664c7cffd7144864b0e4eec369bfde80068f9095dc63b37058bec48",
+  "containerPort": 80,
+  "vmImage": {
+    "publisher": "Canonical",
+    "offer": "ubuntu-24_04-lts",
+    "sku": "server",
+    "version": "24.04.202609040",
+    "architecture": "x64",
+    "hyperVGeneration": "V2",
+    "securityType": "TrustedLaunchSupported",
+    "availabilityEvidence": "Read-only Microsoft.Compute image-version API in swedencentral, API version 2024-03-01; no deployment performed."
+  },
+  "demoExceptions": [
+    "Public Azure Monitor connectivity",
+    "NAT egress is not a destination-filtering firewall",
+    "Pinned preview APIs in upstream AVM",
+    "Solo-presenter approval is not independent separation of duties",
+    "Public-repository private runner is a disposable-demo-only exception",
+    "Microsoft hello-world image is illustrative, not FSI-hardened"
+  ]
+}

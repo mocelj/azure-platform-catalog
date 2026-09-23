@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:avm-demo:environment:1.0",
+  "title": "Platform-owned environment binding (never developer input)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "location", "subscriptionId", "resourceGroups", "network", "privateDnsZones", "logAnalyticsWorkspaceResourceId", "state", "sshPublicKey"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "location": { "const": "swedencentral" },
+    "subscriptionId": { "type": "string", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$" },
+    "resourceGroups": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storage-bicep": { "$ref": "#/definitions/resourceGroup" },
+        "storage-terraform": { "$ref": "#/definitions/resourceGroup" },
+        "vm-bicep": { "$ref": "#/definitions/resourceGroup" },
+        "vm-terraform": { "$ref": "#/definitions/resourceGroup" },
+        "web-app-bicep": { "$ref": "#/definitions/resourceGroup" },
+        "web-app-terraform": { "$ref": "#/definitions/resourceGroup" },
+        "container-app-bicep": { "$ref": "#/definitions/resourceGroup" },
+        "container-app-terraform": { "$ref": "#/definitions/resourceGroup" }
+      },
+      "required": ["storage-bicep", "storage-terraform", "vm-bicep", "vm-terraform", "web-app-bicep", "web-app-terraform", "container-app-bicep", "container-app-terraform"],
+      "maxProperties": 8
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["privateEndpointSubnetResourceId", "vmSubnetResourceId", "webAppSubnetResourceId", "containerAppBicepSubnetResourceId", "containerAppTerraformSubnetResourceId"],
+      "properties": {
+        "privateEndpointSubnetResourceId": { "$ref": "#/definitions/subnet" },
+        "vmSubnetResourceId": { "$ref": "#/definitions/subnet" },
+        "webAppSubnetResourceId": { "$ref": "#/definitions/subnet" },
+        "containerAppBicepSubnetResourceId": { "$ref": "#/definitions/subnet" },
+        "containerAppTerraformSubnetResourceId": { "$ref": "#/definitions/subnet" }
+      }
+    },
+    "privateDnsZones": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["storage", "web-app", "container-app"],
+      "properties": {
+        "storage": { "$ref": "#/definitions/resourceId" },
+        "web-app": { "$ref": "#/definitions/resourceId" },
+        "container-app": { "$ref": "#/definitions/resourceId" }
+      }
+    },
+    "logAnalyticsWorkspaceResourceId": { "$ref": "#/definitions/resourceId" },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceGroupName", "storageAccountName", "containerName", "planContainerName"],
+      "properties": {
+        "resourceGroupName": { "type": "string", "pattern": "^rg-[a-z0-9-]{3,70}$" },
+        "storageAccountName": { "type": "string", "pattern": "^[a-z0-9]{3,24}$" },
+        "containerName": { "const": "tfstate" },
+        "planContainerName": { "const": "plans" }
+      }
+    },
+    "sshPublicKey": { "type": "string", "pattern": "^ssh-(rsa|ed25519) [A-Za-z0-9+/=]+( [^\\r\\n]+)?$" }
+  },
+  "definitions": {
+    "resourceGroup": { "type": "string", "pattern": "^rg-[a-z0-9-]{3,70}$" },
+    "resourceId": { "type": "string", "pattern": "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[A-Za-z0-9._()-]+/providers/Microsoft\\.[A-Za-z]+/[A-Za-z]+/[A-Za-z0-9._()-]+$" },
+    "subnet": { "type": "string", "pattern": "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[A-Za-z0-9._()-]+/providers/Microsoft.Network/virtualNetworks/[A-Za-z0-9._()-]+/subnets/[A-Za-z0-9._()-]+$" }
+  }
+}

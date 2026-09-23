@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "1.0",
+  "scope": "bootstrap/bicep/main.bicep",
+  "owner": "Bicep bootstrap only; Terraform workload roots consume the environment metadata",
+  "upstreamRepository": "https://github.com/Azure/bicep-registry-modules",
+  "upstreamLicense": "MIT",
+  "verification": {
+    "sourceMethod": "Read the exact version-tagged upstream main.bicep before implementation; SHA256 is of the retrieved UTF-8 bytes.",
+    "sourceHashCoverage": "Entry files, not a signature or immutable digest of the complete registry artifact. Bicep restore is also required.",
+    "apiInventoryCoverage": "Per-module lists include upstream entrypoint declarations and type references. compiledApiVersions recursively inventories all resource declarations in the restored bootstrap template, including disabled optional branches.",
+    "liveDeploymentPerformed": false,
+    "requiredBicepVersion": "0.47.16",
+    "pinnedCompilerBuild": {
+      "verifiedOn": "2026-09-23",
+      "compilerVersion": "0.47.16.16243",
+      "compilerBinarySha256": "657e6aacc4e44d73674874f802d98396bf5e2e23530d160f275fbf9d67b7fde7",
+      "restore": "passed",
+      "rootAndSharedComposition": "passed",
+      "parameterFile": "passed",
+      "warnings": 0,
+      "errors": 0,
+      "contractTestCommand": "node --test tests/foundation.test.mjs",
+      "contractTestsPassed": 6,
+      "notes": "Compiled main.bicep, shared.bicep and demo.bicepparam with the exact catalog compiler. Rechecked the recursive compiled API inventory and module-only composition boundaries. No IaC source fixes were required; generated templates were removed after validation."
+    }
+  },
+  "modules": [
+    {
+      "reference": "br/public:avm/res/resources/resource-group:0.4.4",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/resources/resource-group/0.4.4/avm/res/resources/resource-group/main.bicep",
+      "sha256": "2af56a6d2ce6c4d07ad7900719b222652bf631a7d53f0cdb0ffce11819007c92",
+      "apiVersions": ["Microsoft.Resources/resourceGroups@2025-04-01", "Microsoft.Resources/deployments@2025-04-01"],
+      "registryDependencies": ["avm/utl/types/avm-common-types:0.4.1", "avm/utl/types/avm-common-types:0.6.0"]
+    },
+    {
+      "reference": "br/public:avm/res/network/virtual-network:0.10.2",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/network/virtual-network/0.10.2/avm/res/network/virtual-network/main.bicep",
+      "sha256": "f176f76752f777eac3565f8149aab935a7064dfb6f77d7b8e14c0831741fcf70",
+      "apiVersions": ["Microsoft.Network/virtualNetworks@2025-05-01", "Microsoft.Network/virtualNetworks/subnets@2025-05-01", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Insights/diagnosticSettings@2021-05-01-preview", "Microsoft.Resources/deployments@2025-04-01"],
+      "registryDependencies": ["avm/utl/types/avm-common-types:0.7.0"],
+      "interfaceNotes": "subnets[].delegation is a string; natGatewayResourceId is set on each supported subnet; VM defaultOutboundAccess is explicitly false."
+    },
+    {
+      "reference": "br/public:avm/res/network/network-security-group:0.5.3",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/network/network-security-group/0.5.3/avm/res/network/network-security-group/main.bicep",
+      "sha256": "bfce88ba4cabf3983e5bc31913cd489943659403f7b6f1005cab87b43c4ab3b0",
+      "apiVersions": ["Microsoft.Network/networkSecurityGroups@2025-05-01", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Insights/diagnosticSettings@2021-05-01-preview", "Microsoft.Resources/deployments@2024-03-01"],
+      "registryDependencies": ["avm/utl/types/avm-common-types:0.7.0"]
+    },
+    {
+      "reference": "br/public:avm/res/network/private-dns-zone:0.8.1",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/network/private-dns-zone/0.8.1/avm/res/network/private-dns-zone/main.bicep",
+      "sha256": "a6ca1c9c0346a8a1a1d8a962857a56081ea393b969ba80e93dda3aeb087b3e9e",
+      "apiVersions": ["Microsoft.Network/privateDnsZones@2020-06-01", "Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01", "Microsoft.Network/privateDnsZones/A@2024-06-01", "Microsoft.Network/privateDnsZones/AAAA@2024-06-01", "Microsoft.Network/privateDnsZones/CNAME@2024-06-01", "Microsoft.Network/privateDnsZones/MX@2024-06-01", "Microsoft.Network/privateDnsZones/PTR@2024-06-01", "Microsoft.Network/privateDnsZones/SOA@2024-06-01", "Microsoft.Network/privateDnsZones/SRV@2024-06-01", "Microsoft.Network/privateDnsZones/TXT@2024-06-01", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Resources/deployments@2024-03-01"],
+      "registryDependencies": ["avm/utl/types/avm-common-types:0.5.1", "avm/utl/types/avm-common-types:0.6.0"]
+    },
+    {
+      "reference": "br/public:avm/res/managed-identity/user-assigned-identity:0.6.0",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/managed-identity/user-assigned-identity/0.6.0/avm/res/managed-identity/user-assigned-identity/main.bicep",
+      "sha256": "27d758456aa6b485fbef4ee312ef735ae7b09d372311b35a7ee38a4cbfbf0ec6",
+      "apiVersions": ["Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Resources/deployments@2025-04-01"],
+      "registryDependencies": ["avm/utl/types/avm-common-types:0.5.1", "avm/utl/types/avm-common-types:0.6.0"],
+      "interfaceNotes": "Integrated federatedIdentityCredentials array has name, issuer, audiences, subject; one credential on each phase-specific identity."
+    },
+    {
+      "reference": "br/public:avm/res/operational-insights/workspace:0.16.1",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/operational-insights/workspace/0.16.1/avm/res/operational-insights/workspace/main.bicep",
+      "sha256": "c7c44c74d74412fd46be80895416dd07123a4c249af679539d3436f6c96168b0",
+      "apiVersions": ["Microsoft.OperationalInsights/workspaces@2025-07-01", "Microsoft.OperationalInsights/workspaces/dataSources@2025-07-01", "Microsoft.SecurityInsights/onboardingStates@2025-09-01", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Insights/diagnosticSettings@2021-05-01-preview", "Microsoft.Resources/deployments@2025-04-01"],
+      "registryDependencies": ["avm/res/operations-management/solution:0.3.1", "avm/utl/types/avm-common-types:0.6.1"],
+      "interfaceNotes": "dataRetention is days; publicNetworkAccessForIngestion/Query explicitly Enabled under approved demo exception. No AMPLS, Sentinel onboarding, customer-managed keys, or shared-key outputs consumed."
+    },
+    {
+      "reference": "br/public:avm/res/storage/storage-account:0.33.1",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/storage/storage-account/0.33.1/avm/res/storage/storage-account/main.bicep",
+      "sha256": "fe867a0d0c19f4d2ae6c4b15cfd35d1489a626982ea67d20f2e2b75838bca4e4",
+      "apiVersions": ["Microsoft.Storage/storageAccounts@2025-01-01", "Microsoft.Storage/storageAccounts@2025-06-01", "Microsoft.Storage/storageAccounts/fileServices@2024-01-01", "Microsoft.Storage/storageAccounts/managementPolicies@2025-01-01", "Microsoft.KeyVault/vaults@2026-02-01", "Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Insights/diagnosticSettings@2021-05-01-preview", "Microsoft.Resources/deployments@2025-04-01"],
+      "registryDependencies": ["avm/res/network/private-endpoint:0.11.1", "avm/utl/types/avm-common-types:0.6.1"],
+      "interfaceNotes": "blobServices.containers[] integrated roles are container-scoped. privateEndpoints[].service is blob; privateDnsZoneGroup.privateDnsZoneGroupConfigs[].privateDnsZoneResourceId links the zone. Upstream secure key outputs are never forwarded."
+    },
+    {
+      "reference": "br/public:avm/res/authorization/role-assignment/rg-scope:0.1.1",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/authorization/role-assignment/rg-scope/0.1.1/avm/res/authorization/role-assignment/rg-scope/main.bicep",
+      "sha256": "7c941dbd9666305e514d12ab10507766e6a90d6d29163de983b2220d9742986c",
+      "apiVersions": ["Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Resources/deployments@2024-03-01"],
+      "registryDependencies": [],
+      "interfaceNotes": "Published child module under res, not an unpublished parent or ptn path; integrated AVM roles used for resource/subnet/container scopes."
+    },
+    {
+      "reference": "br/public:avm/res/network/nat-gateway:2.1.1",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/network/nat-gateway/2.1.1/avm/res/network/nat-gateway/main.bicep",
+      "sha256": "4e9a149169681abae13d446c8552f2fe1096b4a9248f65f8d806cd9ca7894649",
+      "apiVersions": ["Microsoft.Network/natGateways@2025-05-01", "Microsoft.Network/publicIPAddresses@2024-10-01", "Microsoft.Network/publicIPPrefixes@2024-10-01", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Resources/deployments@2025-04-01"],
+      "registryDependencies": ["avm/res/network/public-ip-address:0.12.0", "avm/res/network/public-ip-address:0.9.0", "avm/res/network/public-ip-prefix:0.7.0", "avm/res/network/public-ip-prefix:0.8.0", "avm/utl/types/avm-common-types:0.6.1"],
+      "interfaceNotes": "natGatewaySku=Standard and availabilityZone selected explicitly. Only publicIpResourceIds used; optional upstream publicIPAddresses/publicIPPrefixes creation branches remain empty."
+    },
+    {
+      "reference": "br/public:avm/res/network/public-ip-address:0.13.0",
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/network/public-ip-address/0.13.0/avm/res/network/public-ip-address/main.bicep",
+      "sha256": "88bd76fa3731ab3794baddc74d1ba3666025d7ede87dea10362dc80a8b9c728a",
+      "apiVersions": ["Microsoft.Network/publicIPAddresses@2025-01-01", "Microsoft.Authorization/locks@2020-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01", "Microsoft.Insights/diagnosticSettings@2021-05-01-preview", "Microsoft.Resources/deployments@2024-03-01"],
+      "registryDependencies": ["avm/utl/types/avm-common-types:0.6.1"],
+      "interfaceNotes": "Standard, Regional, Static, IPv4, single selected logical availability zone; attached only to NAT, never a VM NIC."
+    }
+  ],
+  "reviewedNestedInterfaces": [
+    {
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/network/virtual-network/0.10.2/avm/res/network/virtual-network/subnet/main.bicep",
+      "sha256": "9aa2ec1a44950c833648a86a6ca0fadf70ad61303bd57f810b7530c79cd927e6",
+      "apiVersions": ["Microsoft.Network/virtualNetworks/subnets@2025-05-01", "Microsoft.Authorization/roleAssignments@2022-04-01"]
+    },
+    {
+      "source": "https://raw.githubusercontent.com/Azure/bicep-registry-modules/avm/res/storage/storage-account/0.33.1/avm/res/storage/storage-account/blob-service/main.bicep",
+      "sha256": "5c5bca07fa05c6c7b62659a8007a834fe5804f40cb0120ce037d3c4fdf018fa2",
+      "apiVersions": ["Microsoft.Storage/storageAccounts/blobServices@2025-01-01", "Microsoft.Storage/storageAccounts/blobServices/containers@2024-01-01", "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"]
+    }
+  ],
+  "compiledApiVersions": [
+    "Microsoft.Authorization/locks@2020-05-01",
+    "Microsoft.Authorization/roleAssignments@2022-04-01",
+    "Microsoft.Insights/diagnosticSettings@2021-05-01-preview",
+    "Microsoft.KeyVault/vaults/keys@2026-02-01",
+    "Microsoft.KeyVault/vaults/secrets@2024-11-01",
+    "Microsoft.KeyVault/vaults@2024-11-01",
+    "Microsoft.KeyVault/vaults@2026-02-01",
+    "Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2024-11-30",
+    "Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30",
+    "Microsoft.Network/natGateways@2025-05-01",
+    "Microsoft.Network/networkSecurityGroups@2025-05-01",
+    "Microsoft.Network/privateDnsZones/A@2020-06-01",
+    "Microsoft.Network/privateDnsZones/AAAA@2020-06-01",
+    "Microsoft.Network/privateDnsZones/CNAME@2020-06-01",
+    "Microsoft.Network/privateDnsZones/MX@2020-06-01",
+    "Microsoft.Network/privateDnsZones/PTR@2020-06-01",
+    "Microsoft.Network/privateDnsZones/SOA@2020-06-01",
+    "Microsoft.Network/privateDnsZones/SRV@2020-06-01",
+    "Microsoft.Network/privateDnsZones/TXT@2020-06-01",
+    "Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01",
+    "Microsoft.Network/privateDnsZones@2020-06-01",
+    "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-10-01",
+    "Microsoft.Network/privateEndpoints@2024-10-01",
+    "Microsoft.Network/publicIPAddresses@2025-01-01",
+    "Microsoft.Network/publicIPPrefixes@2025-01-01",
+    "Microsoft.Network/virtualNetworks/subnets@2025-05-01",
+    "Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2025-05-01",
+    "Microsoft.Network/virtualNetworks@2025-05-01",
+    "Microsoft.OperationalInsights/workspaces/dataExports@2025-07-01",
+    "Microsoft.OperationalInsights/workspaces/dataSources@2025-07-01",
+    "Microsoft.OperationalInsights/workspaces/linkedServices@2025-07-01",
+    "Microsoft.OperationalInsights/workspaces/linkedStorageAccounts@2025-07-01",
+    "Microsoft.OperationalInsights/workspaces/savedSearches@2025-07-01",
+    "Microsoft.OperationalInsights/workspaces/storageInsightConfigs@2025-07-01",
+    "Microsoft.OperationalInsights/workspaces/tables@2025-07-01",
+    "Microsoft.OperationalInsights/workspaces@2021-06-01",
+    "Microsoft.OperationalInsights/workspaces@2025-07-01",
+    "Microsoft.OperationsManagement/solutions@2015-11-01-preview",
+    "Microsoft.Resources/deployments@2024-03-01",
+    "Microsoft.Resources/deployments@2025-04-01",
+    "Microsoft.Resources/resourceGroups@2025-04-01",
+    "Microsoft.SecurityInsights/onboardingStates@2025-09-01",
+    "Microsoft.Storage/storageAccounts/blobServices/containers/immutabilityPolicies@2025-01-01",
+    "Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01",
+    "Microsoft.Storage/storageAccounts/blobServices@2025-01-01",
+    "Microsoft.Storage/storageAccounts/fileServices/shares@2025-01-01",
+    "Microsoft.Storage/storageAccounts/fileServices@2025-01-01",
+    "Microsoft.Storage/storageAccounts/fileServices@2025-06-01",
+    "Microsoft.Storage/storageAccounts/localUsers@2025-06-01",
+    "Microsoft.Storage/storageAccounts/managementPolicies@2025-06-01",
+    "Microsoft.Storage/storageAccounts/objectReplicationPolicies@2025-01-01",
+    "Microsoft.Storage/storageAccounts/queueServices/queues@2025-06-01",
+    "Microsoft.Storage/storageAccounts/queueServices@2025-06-01",
+    "Microsoft.Storage/storageAccounts/tableServices/tables@2025-06-01",
+    "Microsoft.Storage/storageAccounts/tableServices@2025-06-01",
+    "Microsoft.Storage/storageAccounts@2025-01-01",
+    "Microsoft.Storage/storageAccounts@2025-06-01"
+  ],
+  "previewApis": [
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "reason": "Pinned upstream AVM diagnostics API; explicitly accepted demo preview dependency. Present in conditional upstream templates and active state Blob diagnostics."
+    },
+    {
+      "type": "Microsoft.OperationsManagement/solutions",
+      "apiVersion": "2015-11-01-preview",
+      "reason": "Optional Log Analytics gallery-solution module in the compiled upstream closure. No gallerySolutions are requested; this branch is inactive in the bootstrap."
+    }
+  ],
+  "securityNotes": [
+    "No first-party resource declarations, inline ARM, CLI resource creation, AMPLS workaround, secrets outputs, or subscription Owner grants.",
+    "Private state requires pre-existing private runner routing and DNS; no public-backend fallback.",
+    "Versioned entrypoint hashes do not authenticate the complete artifact closure; offline compilation and full restored inventory supplement this manifest.",
+    "No claim of Azure deployment, regional capacity, network reachability, or production FSI compliance."
+  ]
+}

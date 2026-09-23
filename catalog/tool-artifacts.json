@@ -1,0 +1,26 @@
+{
+  "bicep": {
+    "linux-x64": {
+      "url": "https://github.com/Azure/bicep/releases/download/v0.47.16/bicep-linux-x64",
+      "sha256": "64c345a58e0c3e48b1bc98a4e62d6b3adb1d238281297de3400aeafb2697aa5a"
+    },
+    "win32-arm64": {
+      "url": "https://github.com/Azure/bicep/releases/download/v0.47.16/bicep-win-arm64.exe",
+      "sha256": "657e6aacc4e44d73674874f802d98396bf5e2e23530d160f275fbf9d67b7fde7"
+    },
+    "win32-x64": {
+      "url": "https://github.com/Azure/bicep/releases/download/v0.47.16/bicep-win-x64.exe",
+      "sha256": "3f343ab1ce41feac156464adee3dc499cb6c197366fc731aed276192011d867c"
+    }
+  },
+  "terraform": {
+    "linux-x64": {
+      "url": "https://releases.hashicorp.com/terraform/1.13.5/terraform_1.13.5_linux_amd64.zip",
+      "sha256": "0dbe3fcc268eb670801af6a6456799d1ae26e72e73797f6c6167e18aafd1fd9a"
+    },
+    "win32-x64": {
+      "url": "https://releases.hashicorp.com/terraform/1.13.5/terraform_1.13.5_windows_amd64.zip",
+      "sha256": "73f97943c93f268ae2c645b2a737d552175aa64d00a5c8b8f5ccc5831c033c8a"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+name: Validate consumer configuration
+on:
+  workflow_call:
+    inputs:
+      catalog_sha:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: consumer
+          persist-credentials: false
+      - name: Require an immutable catalog revision
+        env:
+          CATALOG_SHA: ${{ inputs.catalog_sha }}
+        run: |
+          if [[ ! "$CATALOG_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "catalog_sha must be an exact commit SHA" >&2
+            exit 1
+          fi
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: mocelj/azure-platform-catalog
+          ref: ${{ inputs.catalog_sha }}
+          path: catalog
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: catalog/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: catalog
+      - run: node scripts/platform.mjs check-consumer --directory ../consumer
+        working-directory: catalog

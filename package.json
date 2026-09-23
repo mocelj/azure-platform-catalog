@@ -1,0 +1,17 @@
+{
+  "name": "azure-platform-catalog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AVM-only, config-first Azure platform engineering demonstration",
+  "type": "module",
+  "engines": { "node": "24.18.0" },
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/check.mjs",
+    "validate": "node scripts/platform.mjs validate",
+    "render": "node scripts/platform.mjs render",
+    "iac:check": "node scripts/iac-check.mjs"
+  },
+  "dependencies": { "ajv": "8.17.1", "yaml": "2.8.1" }
+}

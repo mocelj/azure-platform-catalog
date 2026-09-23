@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0",
+  "location": "swedencentral",
+  "subscriptionId": "00000000-0000-0000-0000-000000000000",
+  "resourceGroups": {
+    "storage-bicep": "rg-avmdemo-demo-storage-bicep",
+    "storage-terraform": "rg-avmdemo-demo-storage-terraform",
+    "vm-bicep": "rg-avmdemo-demo-vm-bicep",
+    "vm-terraform": "rg-avmdemo-demo-vm-terraform",
+    "web-app-bicep": "rg-avmdemo-demo-web-app-bicep",
+    "web-app-terraform": "rg-avmdemo-demo-web-app-terraform",
+    "container-app-bicep": "rg-avmdemo-demo-container-app-bicep",
+    "container-app-terraform": "rg-avmdemo-demo-container-app-terraform"
+  },
+  "network": {
+    "privateEndpointSubnetResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/virtualNetworks/vnet-avmdemo-demo/subnets/snet-private-endpoints",
+    "vmSubnetResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/virtualNetworks/vnet-avmdemo-demo/subnets/snet-vm",
+    "webAppSubnetResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/virtualNetworks/vnet-avmdemo-demo/subnets/snet-web-app",
+    "containerAppBicepSubnetResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/virtualNetworks/vnet-avmdemo-demo/subnets/snet-container-app-bicep",
+    "containerAppTerraformSubnetResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/virtualNetworks/vnet-avmdemo-demo/subnets/snet-container-app-terraform"
+  },
+  "privateDnsZones": {
+    "storage": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net",
+    "web-app": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net",
+    "container-app": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.Network/privateDnsZones/privatelink.swedencentral.azurecontainerapps.io"
+  },
+  "logAnalyticsWorkspaceResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-avmdemo-demo-shared/providers/Microsoft.OperationalInsights/workspaces/log-avmdemo-demo",
+  "state": {
+    "resourceGroupName": "rg-avmdemo-demo-shared",
+    "storageAccountName": "stavmdemosynthetic",
+    "containerName": "tfstate",
+    "planContainerName": "plans"
+  },
+  "sshPublicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+GvGi8nASANdwiLHsiEbB4NV4XQXm1O1EQ71thHmEUpyCJGxwoittiwQcPlw8hOBB28lUfLAcnGHblu+S5WWWByEQHp5AzyVrQ1HyJsRGbsPiMogcGd2shaQU+gY/CXq8+1IyhFGpeXHKz6mJmXjYb87YDmYQQQsi4tgDbZ5RrooC3EeGDhdfeRYz2TWyX2DOyl2Yr1obqe+Y9TNG3ReL3t+2jacfZZHLcfC4M4y5iqmHCpvrUsIgtgdOK3FdKQQ1fAWHkHuWEv9mHygEJAKCuTr34xiZIi3U02aBg1t9llQnv5OOjZbGcZXEL361kaOuOE8yfMmQRb9hlJi9rhzB synthetic-public-fixture-do-not-deploy"
+}

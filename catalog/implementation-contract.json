@@ -1,0 +1,19 @@
+{
+  "bicepCommonInputs": ["name", "location", "size", "logAnalyticsWorkspaceResourceId", "tags"],
+  "terraformCommonInputs": ["name", "location", "size", "resource_group_name", "log_analytics_workspace_resource_id", "tags"],
+  "serviceInputs": {
+    "storage": ["privateEndpointSubnetResourceId", "privateDnsZoneResourceId"],
+    "vm": ["subnetResourceId", "sshPublicKey"],
+    "web-app": ["privateEndpointSubnetResourceId", "privateDnsZoneResourceId", "integrationSubnetResourceId"],
+    "container-app": ["privateEndpointSubnetResourceId", "privateDnsZoneResourceId", "infrastructureSubnetResourceId"]
+  },
+  "terraformNaming": "Convert service-specific camelCase input names to snake_case.",
+  "wrapperLocation": "platform-apps/<service>/<engine>/main.bicep or main.tf",
+  "terraformRoot": "Each platform-apps/<service>/terraform directory is a runnable root with an empty azurerm backend block, exact provider versions and committed lock file.",
+  "examples": "examples/platform/<service>/<engine>/README.md plus .bicepparam for Bicep and .example.tfvars.json for Terraform. Bicep examples import the local wrapper; Terraform docs run the catalog's fixed root, not a mutable module download.",
+  "vmImage": "Must be selected from read-only Azure image discovery and hardcoded as an exact version in both implementations. Coordinate the verified value through the parent.",
+  "tags": "Platform-owned metadata only. Hardcode required security settings in the wrapper; do not expose raw AVM configuration objects.",
+  "runtime": "Linux Web App using the supported NODE|24-lts platform-managed runtime and Entra zip deployment; patch lifecycle is Azure-managed and explicitly documented. Container App uses catalog/platform.json's exact digest and port.",
+  "applicationPayload": "A dependency-free Node HTTP hello-world for Web App. Do not run consumer source on the privileged infrastructure runner; payload deployment is a separately documented trusted-release operation.",
+  "validation": "No live deployments. Build Bicep and validate/test Terraform offline. Do not install binaries globally; the parent supplies pinned local tool paths."
+}

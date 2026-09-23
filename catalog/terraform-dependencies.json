@@ -1,0 +1,633 @@
+{
+  "schemaVersion": "1.0",
+  "terraform": "1.13.5",
+  "providerVersions": {
+    "hashicorp/azurerm": "4.81.0",
+    "Azure/azapi": "2.12.0",
+    "Azure/modtm": "0.3.5",
+    "hashicorp/random": "3.9.1",
+    "hashicorp/time": "0.14.2",
+    "hashicorp/tls": "4.4.1"
+  },
+  "apiNote": "AzAPI API versions are inventoried from the selected .tf closure. AzureRM API choices are fixed by the exact provider release, not a configurable module parameter.",
+  "validation": {
+    "azureDeployment": "Not performed",
+    "containerAppMocking": "Terraform 1.13.5 cannot mock the selected environment module ephemeral resource schema, including count-zero resources. Source-contract checks and terraform validate apply; no provider-mocked or live environment coverage is claimed.",
+    "vmProviderWarnings": "Upstream AzureRM metric and vm_agent_platform_updates_enabled deprecations; supported by the pinned AzureRM 4.81.0. No upstream source modified."
+  },
+  "roots": {
+    "storage": {
+      "resolvedModules": [
+        {
+          "key": "storage",
+          "source": "registry.terraform.io/Azure/avm-res-storage-storageaccount/azurerm",
+          "version": "0.10.0"
+        },
+        {
+          "key": "storage.blob_service",
+          "source": "./modules/blob_service",
+          "version": null
+        },
+        {
+          "key": "storage.containers",
+          "source": "./modules/container",
+          "version": null
+        },
+        {
+          "key": "storage.containers.role_assignments",
+          "source": "../role_assignments",
+          "version": null
+        },
+        {
+          "key": "storage.containers.role_assignments.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.data_lake_filesystems",
+          "source": "./modules/data_lake_filesystem",
+          "version": null
+        },
+        {
+          "key": "storage.diagnostic_setting_blob",
+          "source": "./modules/diagnostic_setting",
+          "version": null
+        },
+        {
+          "key": "storage.diagnostic_setting_blob.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.diagnostic_setting_file",
+          "source": "./modules/diagnostic_setting",
+          "version": null
+        },
+        {
+          "key": "storage.diagnostic_setting_file.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.diagnostic_setting_queue",
+          "source": "./modules/diagnostic_setting",
+          "version": null
+        },
+        {
+          "key": "storage.diagnostic_setting_queue.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.diagnostic_setting_storage_account",
+          "source": "./modules/diagnostic_setting",
+          "version": null
+        },
+        {
+          "key": "storage.diagnostic_setting_storage_account.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.diagnostic_setting_table",
+          "source": "./modules/diagnostic_setting",
+          "version": null
+        },
+        {
+          "key": "storage.diagnostic_setting_table.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.file_service",
+          "source": "./modules/file_service",
+          "version": null
+        },
+        {
+          "key": "storage.local_users",
+          "source": "./modules/local_user",
+          "version": null
+        },
+        {
+          "key": "storage.management_policy",
+          "source": "./modules/management_policy",
+          "version": null
+        },
+        {
+          "key": "storage.private_endpoints",
+          "source": "./modules/private_endpoint",
+          "version": null
+        },
+        {
+          "key": "storage.private_endpoints.role_assignments",
+          "source": "../role_assignments",
+          "version": null
+        },
+        {
+          "key": "storage.private_endpoints.role_assignments.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.queue_service",
+          "source": "./modules/queue_service",
+          "version": null
+        },
+        {
+          "key": "storage.queues",
+          "source": "./modules/queue",
+          "version": null
+        },
+        {
+          "key": "storage.queues.role_assignments",
+          "source": "../role_assignments",
+          "version": null
+        },
+        {
+          "key": "storage.queues.role_assignments.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.role_assignments",
+          "source": "./modules/role_assignments",
+          "version": null
+        },
+        {
+          "key": "storage.role_assignments.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.shares",
+          "source": "./modules/share",
+          "version": null
+        },
+        {
+          "key": "storage.shares.role_assignments",
+          "source": "../role_assignments",
+          "version": null
+        },
+        {
+          "key": "storage.shares.role_assignments.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "storage.static_website",
+          "source": "./modules/static_website",
+          "version": null
+        },
+        {
+          "key": "storage.table_service",
+          "source": "./modules/table_service",
+          "version": null
+        },
+        {
+          "key": "storage.tables",
+          "source": "./modules/table",
+          "version": null
+        },
+        {
+          "key": "storage.tables.role_assignments",
+          "source": "../role_assignments",
+          "version": null
+        },
+        {
+          "key": "storage.tables.role_assignments.interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        }
+      ],
+      "remoteModules": [
+        {
+          "source": "registry.terraform.io/Azure/avm-res-storage-storageaccount/azurerm",
+          "version": "0.10.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-res-storage-storageaccount/azurerm/0.10.0",
+          "sourceSha256": "30287624014b85e3b28ef682528c029d4ae2c1eec6be6de93068d475e002a684",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        },
+        {
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-utl-interfaces/azure/0.6.0",
+          "sourceSha256": "ff3010be707e48f8138773fbe504c4e67dc5044565974346d59c00bd36bb9e2b",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        }
+      ],
+      "apiVersions": [
+        "Microsoft.Authorization/locks@2020-05-01",
+        "Microsoft.Authorization/roleAssignments@2022-04-01",
+        "Microsoft.Authorization/roleDefinitions@2022-04-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview",
+        "Microsoft.KeyVault/vaults@2024-11-01",
+        "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31",
+        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01",
+        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2025-05-01",
+        "Microsoft.Network/privateEndpoints@2024-05-01",
+        "Microsoft.Network/privateEndpoints@2025-05-01",
+        "Microsoft.Storage/storageAccounts/blobServices/containers@2025-06-01",
+        "Microsoft.Storage/storageAccounts/blobServices@2025-06-01",
+        "Microsoft.Storage/storageAccounts/blobServices@2025-08-01",
+        "Microsoft.Storage/storageAccounts/fileServices/shares@2025-06-01",
+        "Microsoft.Storage/storageAccounts/fileServices@2025-06-01",
+        "Microsoft.Storage/storageAccounts/localUsers@2025-06-01",
+        "Microsoft.Storage/storageAccounts/managementPolicies@2025-06-01",
+        "Microsoft.Storage/storageAccounts/queueServices/queues@2025-06-01",
+        "Microsoft.Storage/storageAccounts/queueServices@2025-06-01",
+        "Microsoft.Storage/storageAccounts/tableServices/tables@2025-06-01",
+        "Microsoft.Storage/storageAccounts/tableServices@2025-06-01",
+        "Microsoft.Storage/storageAccounts@2025-08-01"
+      ]
+    },
+    "vm": {
+      "resolvedModules": [
+        {
+          "key": "vm",
+          "source": "registry.terraform.io/Azure/avm-res-compute-virtualmachine/azurerm",
+          "version": "0.21.0"
+        },
+        {
+          "key": "vm.extension",
+          "source": "./modules/extension",
+          "version": null
+        },
+        {
+          "key": "vm.extension_1",
+          "source": "./modules/extension",
+          "version": null
+        },
+        {
+          "key": "vm.extension_2",
+          "source": "./modules/extension",
+          "version": null
+        },
+        {
+          "key": "vm.extension_3",
+          "source": "./modules/extension",
+          "version": null
+        },
+        {
+          "key": "vm.extension_4",
+          "source": "./modules/extension",
+          "version": null
+        },
+        {
+          "key": "vm.run_command",
+          "source": "./modules/run-command",
+          "version": null
+        },
+        {
+          "key": "vm.run_command_1",
+          "source": "./modules/run-command",
+          "version": null
+        },
+        {
+          "key": "vm.run_command_2",
+          "source": "./modules/run-command",
+          "version": null
+        }
+      ],
+      "remoteModules": [
+        {
+          "source": "registry.terraform.io/Azure/avm-res-compute-virtualmachine/azurerm",
+          "version": "0.21.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-res-compute-virtualmachine/azurerm/0.21.0",
+          "sourceSha256": "e0f54a05928c8a40826a603b5a9a291af368f4991f63f0ba788876ff904be8b6",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        }
+      ],
+      "apiVersions": [
+        "Microsoft.Maintenance/configurationAssignments@2023-04-01",
+        "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems@2024-10-01"
+      ]
+    },
+    "web-app": {
+      "resolvedModules": [
+        {
+          "key": "plan",
+          "source": "registry.terraform.io/Azure/avm-res-web-serverfarm/azurerm",
+          "version": "2.0.8"
+        },
+        {
+          "key": "plan.avm_interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0"
+        },
+        {
+          "key": "site",
+          "source": "registry.terraform.io/Azure/avm-res-web-site/azurerm",
+          "version": "0.23.0"
+        },
+        {
+          "key": "site.avm_interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.7.0"
+        },
+        {
+          "key": "site.certificate",
+          "source": "./modules/certificate",
+          "version": null
+        },
+        {
+          "key": "site.config_appsettings",
+          "source": "./modules/config_appsettings",
+          "version": null
+        },
+        {
+          "key": "site.config_authsettings",
+          "source": "./modules/config_authsettings",
+          "version": null
+        },
+        {
+          "key": "site.config_authsettingsv2",
+          "source": "./modules/config_authsettingsv2",
+          "version": null
+        },
+        {
+          "key": "site.config_azurestorageaccounts",
+          "source": "./modules/config_azurestorageaccounts",
+          "version": null
+        },
+        {
+          "key": "site.config_backup",
+          "source": "./modules/config_backup",
+          "version": null
+        },
+        {
+          "key": "site.config_connectionstrings",
+          "source": "./modules/config_connectionstrings",
+          "version": null
+        },
+        {
+          "key": "site.config_logs",
+          "source": "./modules/config_logs",
+          "version": null
+        },
+        {
+          "key": "site.config_metadata",
+          "source": "./modules/config_metadata",
+          "version": null
+        },
+        {
+          "key": "site.config_slotconfignames",
+          "source": "./modules/config_slotconfignames",
+          "version": null
+        },
+        {
+          "key": "site.extensions_zipdeploy",
+          "source": "./modules/extensions_zipdeploy",
+          "version": null
+        },
+        {
+          "key": "site.ftp_publishing_credential_policy",
+          "source": "./modules/publishing_credential_policy",
+          "version": null
+        },
+        {
+          "key": "site.hostname_binding",
+          "source": "./modules/hostname_binding",
+          "version": null
+        },
+        {
+          "key": "site.scm_publishing_credential_policy",
+          "source": "./modules/publishing_credential_policy",
+          "version": null
+        },
+        {
+          "key": "site.site_config_helpers",
+          "source": "./modules/site_config_helpers",
+          "version": null
+        },
+        {
+          "key": "site.slot",
+          "source": "./modules/slot",
+          "version": null
+        },
+        {
+          "key": "site.slot_hostname_binding",
+          "source": "./modules/hostname_binding",
+          "version": null
+        },
+        {
+          "key": "site.slot.avm_interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.7.0"
+        },
+        {
+          "key": "site.slot.config_appsettings",
+          "source": "../config_appsettings",
+          "version": null
+        },
+        {
+          "key": "site.slot.config_azurestorageaccounts",
+          "source": "../config_azurestorageaccounts",
+          "version": null
+        },
+        {
+          "key": "site.slot.config_connectionstrings",
+          "source": "../config_connectionstrings",
+          "version": null
+        },
+        {
+          "key": "site.slot.config_metadata",
+          "source": "../config_metadata",
+          "version": null
+        },
+        {
+          "key": "site.slot.extensions_zipdeploy",
+          "source": "../extensions_zipdeploy",
+          "version": null
+        },
+        {
+          "key": "site.slot.ftp_publishing_credential_policy",
+          "source": "../publishing_credential_policy",
+          "version": null
+        },
+        {
+          "key": "site.slot.scm_publishing_credential_policy",
+          "source": "../publishing_credential_policy",
+          "version": null
+        },
+        {
+          "key": "site.slot.site_config_helpers",
+          "source": "../site_config_helpers",
+          "version": null
+        }
+      ],
+      "remoteModules": [
+        {
+          "source": "registry.terraform.io/Azure/avm-res-web-serverfarm/azurerm",
+          "version": "2.0.8",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-res-web-serverfarm/azurerm/2.0.8",
+          "sourceSha256": "1312094f1e3f2227ac8e46b6c2de74556b2dfeccefba7379c26f1ce8a92ba8ea",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        },
+        {
+          "source": "registry.terraform.io/Azure/avm-res-web-site/azurerm",
+          "version": "0.23.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-res-web-site/azurerm/0.23.0",
+          "sourceSha256": "f5d8a3be7ddeb19265dcc2e64f81b809836e6f89e80c18b397a3b4807cc17405",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        },
+        {
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.6.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-utl-interfaces/azure/0.6.0",
+          "sourceSha256": "ff3010be707e48f8138773fbe504c4e67dc5044565974346d59c00bd36bb9e2b",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        },
+        {
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.7.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-utl-interfaces/azure/0.7.0",
+          "sourceSha256": "4ab68a595df123689d3112e686fbde9305c39bcc8d9c7bd1075d6677e914686e",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        }
+      ],
+      "apiVersions": [
+        "Microsoft.Authorization/locks@2020-05-01",
+        "Microsoft.Authorization/roleAssignments@2022-04-01",
+        "Microsoft.Authorization/roleDefinitions@2022-04-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview",
+        "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31",
+        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01",
+        "Microsoft.Network/privateEndpoints@2024-05-01",
+        "Microsoft.Web/certificates@2025-03-01",
+        "Microsoft.Web/serverfarms@2025-03-01",
+        "Microsoft.Web/sites/basicPublishingCredentialsPolicies@2025-03-01",
+        "Microsoft.Web/sites/config@2025-03-01",
+        "Microsoft.Web/sites/hostNameBindings@2025-03-01",
+        "Microsoft.Web/sites/slots/basicPublishingCredentialsPolicies@2025-03-01",
+        "Microsoft.Web/sites/slots/config@2025-03-01",
+        "Microsoft.Web/sites/slots/hostNameBindings@2025-03-01",
+        "Microsoft.Web/sites/slots@2025-03-01",
+        "Microsoft.Web/sites@2025-03-01",
+        "Microsoft.Web@2024-11-01"
+      ]
+    },
+    "container-app": {
+      "resolvedModules": [
+        {
+          "key": "app",
+          "source": "registry.terraform.io/Azure/avm-res-app-containerapp/azurerm",
+          "version": "0.9.0"
+        },
+        {
+          "key": "app.avm_interfaces",
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.5.0"
+        },
+        {
+          "key": "environment",
+          "source": "registry.terraform.io/Azure/avm-res-app-managedenvironment/azurerm",
+          "version": "0.5.0"
+        },
+        {
+          "key": "environment.certificates",
+          "source": "./modules/certificates",
+          "version": null
+        },
+        {
+          "key": "environment.dapr_components",
+          "source": "./modules/dapr_components",
+          "version": null
+        },
+        {
+          "key": "environment.dapr_subscriptions",
+          "source": "./modules/dapr_subscriptions",
+          "version": null
+        },
+        {
+          "key": "environment.dot_net_components",
+          "source": "./modules/dot_net_components",
+          "version": null
+        },
+        {
+          "key": "environment.http_route_configs",
+          "source": "./modules/http_route_configs",
+          "version": null
+        },
+        {
+          "key": "environment.java_components",
+          "source": "./modules/java_components",
+          "version": null
+        },
+        {
+          "key": "environment.maintenance_configurations",
+          "source": "./modules/maintenance_configurations",
+          "version": null
+        },
+        {
+          "key": "environment.managed_certificates",
+          "source": "./modules/managed_certificates",
+          "version": null
+        },
+        {
+          "key": "environment.storages",
+          "source": "./modules/storages",
+          "version": null
+        },
+        {
+          "key": "private_endpoint",
+          "source": "registry.terraform.io/Azure/avm-res-network-privateendpoint/azurerm",
+          "version": "0.2.0"
+        }
+      ],
+      "remoteModules": [
+        {
+          "source": "registry.terraform.io/Azure/avm-res-app-containerapp/azurerm",
+          "version": "0.9.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-res-app-containerapp/azurerm/0.9.0",
+          "sourceSha256": "d4fb7f87362fd0873adfaa6d38f35f79d4457018f334e25457d3d30d7f0cba2f",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        },
+        {
+          "source": "registry.terraform.io/Azure/avm-res-app-managedenvironment/azurerm",
+          "version": "0.5.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-res-app-managedenvironment/azurerm/0.5.0",
+          "sourceSha256": "9c14461718c83b35950d5a7396734e94c7148f93a55398bb7578e5b4ceb2cbed",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        },
+        {
+          "source": "registry.terraform.io/Azure/avm-res-network-privateendpoint/azurerm",
+          "version": "0.2.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-res-network-privateendpoint/azurerm/0.2.0",
+          "sourceSha256": "c74b02b0d8dd6b0bba49db1a26ada1c6d3c50452c3c80dc56e81fa4dd7e63d18",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        },
+        {
+          "source": "registry.terraform.io/Azure/avm-utl-interfaces/azure",
+          "version": "0.5.0",
+          "registry": "https://registry.terraform.io/modules/Azure/avm-utl-interfaces/azure/0.5.0",
+          "sourceSha256": "50a7e42c2928d5ed7c63bfcd974abc359e1ccd20b8470264d009d819cae90db4",
+          "hashScope": "Sorted relative .tf paths and LF-normalized contents, excluding tests/examples and tooling directories"
+        }
+      ],
+      "apiVersions": [
+        "Microsoft.App/containerApps/authConfigs@2025-01-01",
+        "Microsoft.App/containerApps@2025-02-02-preview",
+        "Microsoft.App/containerApps@2025-07-01",
+        "Microsoft.App/managedEnvironments/certificates@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/daprComponents@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/daprSubscriptions@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/dotNetComponents@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/httpRouteConfigs@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/javaComponents@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/maintenanceConfigurations@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/managedCertificates@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments/storages@2025-10-02-preview",
+        "Microsoft.App/managedEnvironments@2025-10-02-preview",
+        "Microsoft.Authorization/locks@2020-05-01",
+        "Microsoft.Authorization/roleAssignments@2022-04-01",
+        "Microsoft.Authorization/roleDefinitions@2022-04-01",
+        "Microsoft.Insights/diagnosticSettings@2021-05-01-preview",
+        "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31",
+        "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01",
+        "Microsoft.Network/privateEndpoints@2024-05-01",
+        "Microsoft.OperationalInsights/workspaces@2020-08-01",
+        "Microsoft.Resources/resourceGroups@2024-11-01"
+      ]
+    }
+  }
+}
