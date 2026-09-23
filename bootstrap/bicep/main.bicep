@@ -1,6 +1,6 @@
 targetScope = 'subscription'
 
-@description('Platform-owned prefix. Use lower-case letters and digits; this is not a developer input.')
+@description('Prefix for shared platform resources, set by the platform team. Use lower-case letters and digits.')
 @minLength(3)
 @maxLength(12)
 param namePrefix string = 'avmdemo'
@@ -8,17 +8,17 @@ param namePrefix string = 'avmdemo'
 @allowed(['swedencentral'])
 param location string = 'swedencentral'
 
-@description('Caller-approved RFC1918 IPv4 management CIDR, reachable through existing private connectivity. No internet SSH.')
+@description('RFC1918 IPv4 CIDR for the management network. SSH is limited to this range over existing private connectivity.')
 param approvedManagementCidr string
 
-@description('Caller-owned SSH PUBLIC key only. Never provide or output private key material.')
+@description('SSH public key used to access the VM examples. Keep the corresponding private key on the management host.')
 @minLength(32)
 param sshPublicKey string
 
-@description('Trusted catalog repository, not the consumer repository.')
+@description('GitHub repository that runs the platform deployment workflows.')
 param catalogRepository string = 'mocelj/azure-platform-catalog'
 
-@description('A deliberately selected logical zone for both Standard NAT and its Standard public IP. Verify regional availability before deployment.')
+@description('Logical availability zone for the Standard NAT Gateway and its public IP. Confirm zone availability in the target region.')
 @allowed([1, 2, 3])
 param availabilityZone int = 1
 
@@ -79,7 +79,7 @@ module workloadResourceGroups 'br/public:avm/res/resources/resource-group:0.4.4'
   }
 }]
 
-@description('Exactly the environment.schema.json binding. Save only this value as platform-owned environment metadata after a separately approved bootstrap.')
+@description('Environment configuration matching environment.schema.json. Save this output for use by the platform deployment workflows.')
 output environmentMetadata object = {
   schemaVersion: '1.0'
   location: location
@@ -92,8 +92,8 @@ output environmentMetadata object = {
   sshPublicKey: sshPublicKey
 }
 
-@description('Non-secret GitHub Environment identity configuration, deliberately separate from the metadata schema.')
+@description('Identity details for the GitHub deployment environments. These are separate from the workload environment configuration and contain no credentials.')
 output deploymentIdentities object = shared.outputs.deploymentIdentities
 
-@description('Non-secret shared resource IDs for operator preflight and cleanup; not Terraform-managed resources.')
+@description('Shared resource IDs for preflight checks and cleanup. These resources remain managed by the Bicep bootstrap.')
 output foundationResourceIds object = shared.outputs.foundationResourceIds

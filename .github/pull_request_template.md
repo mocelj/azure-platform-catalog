@@ -1,17 +1,17 @@
 ## Change and affected targets
 
-Describe the approved behavior and why the platform contract needs this change.
+Describe the change, affected service-engine targets, and the reason for it.
 
-## Evidence
+## Validation
 
-- [ ] I listed the exact validation commands run and their results below.
-- [ ] Bicep/Terraform contract parity and relevant negative cases are covered.
-- [ ] Dependency pins, provenance, locks, examples, and docs are updated where affected.
+- [ ] Commands and results are recorded below, including any checks not run.
+- [ ] Tests cover both engines and relevant rejected inputs.
+- [ ] Dependency records, locks, examples, and documentation are updated where affected.
 - [ ] No credentials, customer data, state, saved plans, or live environment bindings are included.
-- [ ] No custom base IaC or privileged execution of consumer code was introduced.
+- [ ] Infrastructure still uses official AVM, and consumer code stays off the deployment runner.
 
 Commands and results:
 
-## Connected impact
+## Deployment impact
 
-State **not run** unless live checks were separately authorized and performed. Identify any new permissions, cost drivers, replacement/deletion risks, preview APIs, or exceptions. Offline checks are not evidence of deployment, private connectivity, application health, or compliance.
+Summarize permission changes, cost drivers, replacements or deletions, and any new preview APIs or exceptions. List Azure checks separately from local validation, including those still needed before deployment.

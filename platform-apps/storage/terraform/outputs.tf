@@ -1,5 +1,5 @@
 output "resource_id" {
-  description = "Storage account resource ID, never account keys."
+  description = "Storage account resource ID."
   value       = module.storage.resource_id
 }
 
@@ -9,7 +9,7 @@ output "name" {
 }
 
 output "hostname" {
-  description = "Blob hostname; private DNS and connectivity are required."
+  description = "Blob hostname, resolved through private DNS from the client network."
   value       = module.storage.fqdn.blob
 }
 

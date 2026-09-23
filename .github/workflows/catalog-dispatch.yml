@@ -1,9 +1,9 @@
-name: Catalog plan or apply (disabled until configured)
+name: Plan or deploy a platform app
 on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Plan first; apply only a reviewed saved plan
+        description: Generate a plan, or apply a plan you have reviewed
         type: choice
         options: [plan, apply]
         required: true
@@ -12,11 +12,11 @@ on:
         options: [storage-bicep, storage-terraform, vm-bicep, vm-terraform, web-app-bicep, web-app-terraform, container-app-bicep, container-app-terraform]
         required: true
       consumer_sha:
-        description: Exact 40-character consumer commit already merged into main
+        description: Full SHA of a consumer commit merged into main
         type: string
         required: true
       plan_id:
-        description: Apply only; numeric run_attempt ID printed by a successful plan
+        description: For apply, use the plan_id from the completed plan run
         type: string
         required: false
 permissions:
@@ -80,6 +80,6 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Remove this run's local cloud material
+      - name: Remove local files from this deployment run
         if: always()
         run: node scripts/cleanup-run.mjs

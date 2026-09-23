@@ -1,9 +1,9 @@
 # Contributing
 
-This is a demonstration of a constrained developer interface over official AVM. Changes must preserve that boundary, not turn the catalog into an arbitrary infrastructure execution service.
+The catalog maintains a common developer interface across Bicep and Terraform. Contributions should keep that interface small and put infrastructure choices in the platform-owned wrappers.
 
-1. Explain the intended behavior and affected targets in a PR.
-2. Use the exact tool versions in [`catalog/toolchain.json`](catalog/toolchain.json).
+1. Describe the intended behavior, affected targets, and operational impact in the PR.
+2. Use the versions in [`catalog/toolchain.json`](catalog/toolchain.json) to match CI.
 3. Run from the catalog root:
 
    ```powershell
@@ -14,14 +14,14 @@ This is a demonstration of a constrained developer interface over official AVM. 
    npm run iac:check
    ```
 
-   Dependency/tool downloads need network access; these checks do not deploy Azure resources. Report commands actually run and any failures. See [release gates](docs/rehearsal.md).
-4. Add positive and negative tests for contract or control changes. Keep Bicep and Terraform behavior aligned, with separate resources and state.
-5. Update the relevant example, compatibility records, and documentation. Dependency upgrades require explicit review; never regenerate provider locks with upgrades during normal CI.
+   Restoring tools and dependencies requires network access, but the checks do not deploy Azure resources. Include results and any remaining gaps in the PR. The [validation guide](docs/rehearsal.md) describes the test coverage.
+4. Cover accepted and rejected inputs when changing the interface or controls. Keep equivalent behavior across both engines while retaining separate resource ownership and state.
+5. Update examples, dependency records, and documentation together. Regenerate provider locks in a dependency-upgrade PR rather than during routine CI.
 
-First-party infrastructure must compose pinned official AVM. Do not add custom Azure resource declarations, Terraform provisioners, inline ARM, `az rest` creation paths, mutable dependencies, or passthrough objects that bypass policy. Changing schema validation alone does not change wrapper controls.
+Infrastructure changes use pinned official AVM modules. Custom resource declarations, Terraform provisioners, inline ARM, CLI resource creation, and unrestricted AVM parameter objects are outside this design. Security settings belong in the wrappers as well as the input checks, so direct platform-team use retains the same controls.
 
-Do not include real environment bindings, tokens, SSH private keys, state, saved plans, deployment outputs, customer identifiers, or sensitive logs in commits or public artifacts. See [SECURITY.md](SECURITY.md).
+Keep real environment bindings, credentials, SSH private keys, state, saved plans, customer identifiers, and sensitive deployment output out of commits and public artifacts. See [SECURITY.md](SECURITY.md) for reporting and handling guidance.
 
-Maintainers review platform-owned files and connected execution separately. A passing public PR check is not deployment authorization. Public contributions never execute on the private runner. CODEOWNERS only requests reviews; repository rules and environment restrictions must also be configured.
+Maintainers review platform changes and deployment authorization separately. PR checks run on hosted runners; the private runner executes only catalog deployment jobs. CODEOWNERS provides review routing, while repository rules and environment settings enforce it.
 
-Original contributions are licensed under [MIT](LICENSE). Upstream AVM, providers, Actions, tools, and images keep their own licenses and attribution. Do not copy or relicense upstream source as original demo code.
+Original contributions use the [MIT license](LICENSE). Upstream AVM, providers, Actions, tools, and images retain their own licenses and attribution.

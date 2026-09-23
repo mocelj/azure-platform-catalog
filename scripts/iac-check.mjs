@@ -41,12 +41,12 @@ try {
     if (files(directory).some((file) => file.endsWith('.tftest.hcl'))) {
       run(terraform, ['test', '-no-color', `-var-file=${join(root, 'examples', 'platform', service, 'terraform', '.example.tfvars.json')}`], directory);
     } else {
-      console.log(`${service}: provider-mocked tests unavailable because Terraform 1.13.5 cannot mock the upstream ephemeral resource schema. Source-contract checks and terraform validate cover this root; live behavior is unverified.`);
+      console.log(`${service}: Terraform 1.13.5 cannot mock the environment module's ephemeral resource schema. This example is checked through source assertions and terraform validate, without mocked plan or live deployment coverage.`);
     }
   }
   run(process.execPath, [join(root, 'scripts', 'dependencies.mjs'), '--check']);
   writeFileSync(join(out, 'bicep-api-inventory.json'), JSON.stringify([...apis].sort(), null, 2) + '\n');
-  console.log(`Offline IaC checks passed for ${bicepFiles.length} Bicep files and four Terraform roots. Azure deployment/network behavior remains unverified.`);
+  console.log(`Build and validation passed for ${bicepFiles.length} Bicep files and four Terraform roots. No resources were deployed; private-network checks are part of the Azure rehearsal.`);
 } catch (error) {
   console.error(`Offline IaC validation failed: ${error.message}`);
   process.exitCode = 1;

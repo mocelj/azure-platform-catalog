@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.0",
-  "scope": "Four workload wrappers. Shared foundation dependencies are documented separately by its owner.",
+  "scope": "The four Bicep workload wrappers. Shared infrastructure dependencies are listed in bootstrap-dependencies.json.",
   "bicepVersion": "0.47.16",
   "sourceRepository": "https://github.com/Azure/bicep-registry-modules",
-  "sourceVerification": "Parameters and nested-module schemas inspected at the exact upstream release tags below; compilation uses their version-pinned br/public OCI artifacts. No moving main branch is used.",
-  "resourceOwnership": "Every Azure resource is declared by upstream AVM. First-party wrappers contain only parameters, variables, AVM module calls and non-secret resource-ID/name outputs.",
-  "apiInventoryScope": "APIs observed in pinned upstream source. Optional AVM features may include additional nested APIs even when disabled; presence in a compiled artifact does not prove deployment.",
+  "sourceVerification": "Inputs and nested-module schemas were checked against the release tags below. Builds restore the corresponding versioned br/public artifacts.",
+  "resourceOwnership": "AVM defines the Azure resources. The catalog wrappers supply parameters, compose the modules and return resource IDs and names.",
+  "apiInventoryScope": "API versions used by the selected AVM sources. Compiled templates can include optional features that this configuration does not deploy.",
   "modules": [
     {
       "workload": "storage",
@@ -24,8 +24,8 @@
         "br/public:avm/utl/types/avm-common-types:0.6.1"
       ],
       "notes": [
-        "Blob diagnostics, retention and private endpoint are native module inputs.",
-        "Upstream storage module declares secure access-key/connection-string outputs. Wrapper never references or re-exports them; Shared Key authorization is disabled."
+        "The Storage AVM provides the Blob diagnostics, retention and private endpoint settings used here.",
+        "Shared Key authorization is disabled. The wrapper does not expose the access-key or connection-string outputs available in the upstream module."
       ]
     },
     {
@@ -46,9 +46,9 @@
         "br/public:avm/utl/types/avm-common-types:0.6.1"
       ],
       "notes": [
-        "The optional upstream public-IP module is disabled because no pipConfiguration is supplied.",
-        "The VM AVM has no top-level diagnosticSettings input. Native NIC AllMetrics diagnostics target the provided workspace; boot diagnostics are managed separately. Guest logs/guest performance are not configured and must not be claimed.",
-        "The upstream publicNetworkAccess/networkAccessPolicy parameters govern AVM-managed data disks, not the implicit VM OS disk. No data disks are created by this wrapper; do not claim these parameters disable OS disk export."
+        "No pipConfiguration is supplied, so the AVM does not create a public IP.",
+        "This VM AVM has no top-level diagnosticSettings input. The example sends NIC metrics to Log Analytics and enables managed boot diagnostics; guest logs and performance collection are not configured.",
+        "The AVM publicNetworkAccess and networkAccessPolicy parameters apply to its data disks, not the VM OS disk. This example creates no data disks and does not configure OS disk export restrictions."
       ]
     },
     {
@@ -82,8 +82,8 @@
         "br/public:avm/utl/types/avm-common-types:0.6.1"
       ],
       "notes": [
-        "NODE|24-lts is an Azure-managed patch channel, not an exact Node executable pin.",
-        "Inbound Private Link and outbound VNet integration use separate platform-owned subnets."
+        "NODE|24-lts selects the App Service runtime channel; Azure manages its patch version.",
+        "Inbound Private Link and outbound VNet integration use separate subnets."
       ]
     },
     {
@@ -103,8 +103,8 @@
         "br/public:avm/utl/types/avm-common-types:0.7.0"
       ],
       "notes": [
-        "Integrated privateEndpoints input targets the managedEnvironments group; not an internal-only environment.",
-        "azure-monitor log destination avoids workspace shared-key reads; diagnostics provide the workspace binding."
+        "The privateEndpoints input creates Private Link for the managedEnvironments subresource. This is separate from the internal-load-balancer option.",
+        "The azure-monitor destination sends logs through diagnostic settings without reading workspace shared keys."
       ]
     },
     {
@@ -122,8 +122,8 @@
         "br/public:avm/utl/types/avm-common-types:0.6.1"
       ],
       "notes": [
-        "Container image digest and port are compile-time values from catalog/platform.json; not developer inputs.",
-        "External app ingress permits private callers outside the environment while environment public network access stays disabled."
+        "The image digest and port come from catalog/platform.json and are set at compile time.",
+        "External app ingress allows clients outside the environment to connect through its private endpoint. Public network access remains disabled."
       ]
     }
   ],
@@ -131,7 +131,7 @@
     {
       "resourceType": "Microsoft.Insights/diagnosticSettings",
       "apiVersion": "2021-05-01-preview",
-      "reason": "Pinned upstream AVM diagnostic-setting implementations use this API. Accepted only as the explicitly documented demo exception; do not silently substitute a moving API."
+      "reason": "The selected AVM diagnostic-setting implementations use this preview API. It is included in the demo's documented preview dependencies."
     }
   ],
   "vmImage": {
@@ -140,8 +140,8 @@
     "sku": "server",
     "version": "24.04.202609040",
     "location": "swedencentral",
-    "verification": "Parent verified this exact version exists through the read-only Microsoft.Compute locations/publishers/Canonical/artifacttypes/vmimage/offers/ubuntu-24_04-lts/skus/server/versions endpoint, api-version=2024-03-01, in swedencentral. No deployment performed.",
-    "compatibilityVerification": "Parent verified exact image metadata read-only: architecture x64, hyperVGeneration V2, SecurityType=TrustedLaunchSupported, accelerated networking supported, Linux OS disk 30 GiB.",
+    "verification": "This version was found in swedencentral through the Microsoft.Compute image-version API (2024-03-01). The check read metadata; it did not deploy a VM.",
+    "compatibilityVerification": "Image metadata reports x64, Generation 2, Trusted Launch and accelerated networking support, with a 30 GiB Linux OS disk.",
     "architecture": "x64",
     "hyperVGeneration": "V2",
     "securityType": "TrustedLaunchSupported",
@@ -159,11 +159,11 @@
     "compiledParameterFiles": 4,
     "compilerWarnings": 0,
     "compilerErrors": 0,
-    "compiledInterfaceChecks": "All four compiled templates and example parameter files match implementation-contract.json exactly; Sweden Central and small/medium enums, disabled telemetry and module-only resource boundaries verified.",
+    "compiledInterfaceChecks": "All four templates and parameter examples match implementation-contract.json. Checks cover region and size choices, disabled AVM telemetry and resource creation through AVM.",
     "compiledPreviewApiVersions": [
       "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
     ],
-    "compiledApiInventoryNotes": "Recursively inspected all four restored template closures, including inactive optional AVM branches. No additional preview APIs found. Generated templates were removed after local validation; repeat builds in CI for each release.",
+    "compiledApiInventoryNotes": "The inventory includes nested templates and inactive optional AVM features. No additional preview APIs were found. CI rebuilds the templates for each change.",
     "liveDeployed": false,
     "whatIfExecuted": false,
     "runtimeVerified": false

@@ -10,15 +10,15 @@ param location string = 'swedencentral'
 @allowed(['small', 'medium'])
 param size string = 'small'
 
-@description('Platform-owned Log Analytics workspace resource ID for NIC metrics.')
+@description('Resource ID of the Log Analytics workspace receiving NIC metrics.')
 param logAnalyticsWorkspaceResourceId string
 
-@description('Platform-owned metadata; mandatory catalog tags cannot be overridden.')
+@description('Additional resource tags. The wrapper retains the required catalog tags.')
 param tags object = {}
 
 param subnetResourceId string
 
-@description('SSH PUBLIC key only. No password or private key is accepted.')
+@description('SSH public key for VM access. Password authentication is disabled.')
 param sshPublicKey string
 
 var platformTags = union(tags, {

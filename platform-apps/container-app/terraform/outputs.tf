@@ -14,7 +14,7 @@ output "url" {
 }
 
 output "environment_resource_id" {
-  description = "Private-link-enabled workload-profiles environment ID."
+  description = "Resource ID of the workload-profiles environment."
   value       = module.environment.resource_id
 }
 

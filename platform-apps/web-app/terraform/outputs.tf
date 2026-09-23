@@ -9,11 +9,11 @@ output "name" {
 }
 
 output "hostname" {
-  description = "Site hostname; private DNS and connectivity are required."
+  description = "Site hostname, resolved through private DNS from the client network."
   value       = module.site.resource_uri
 }
 
 output "system_assigned_mi_principal_id" {
-  description = "System-assigned identity principal ID; not a credential."
+  description = "Principal ID of the Web App's system-assigned managed identity."
   value       = module.site.system_assigned_mi_principal_id
 }

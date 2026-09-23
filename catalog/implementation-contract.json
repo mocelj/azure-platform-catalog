@@ -7,13 +7,13 @@
     "web-app": ["privateEndpointSubnetResourceId", "privateDnsZoneResourceId", "integrationSubnetResourceId"],
     "container-app": ["privateEndpointSubnetResourceId", "privateDnsZoneResourceId", "infrastructureSubnetResourceId"]
   },
-  "terraformNaming": "Convert service-specific camelCase input names to snake_case.",
+  "terraformNaming": "The renderer maps Bicep camelCase input names to Terraform snake_case.",
   "wrapperLocation": "platform-apps/<service>/<engine>/main.bicep or main.tf",
-  "terraformRoot": "Each platform-apps/<service>/terraform directory is a runnable root with an empty azurerm backend block, exact provider versions and committed lock file.",
-  "examples": "examples/platform/<service>/<engine>/README.md plus .bicepparam for Bicep and .example.tfvars.json for Terraform. Bicep examples import the local wrapper; Terraform docs run the catalog's fixed root, not a mutable module download.",
-  "vmImage": "The exact image in catalog/platform.json was verified through read-only Azure discovery and is hardcoded in both implementations. Recheck regional availability before any connected rehearsal.",
-  "tags": "Platform-owned metadata only. Hardcode required security settings in the wrapper; do not expose raw AVM configuration objects.",
-  "runtime": "Linux Web App using the supported NODE|24-lts platform-managed runtime and Entra zip deployment; patch lifecycle is Azure-managed and explicitly documented. Container App uses catalog/platform.json's exact digest and port.",
-  "applicationPayload": "A dependency-free Node HTTP hello-world for Web App. Do not run consumer source on the privileged infrastructure runner; payload deployment is a separately documented trusted-release operation.",
-  "validation": "No live deployments. scripts/tooling.mjs installs checksum-pinned binaries locally. Run npm run iac:check; Container Apps mock coverage is explicitly unavailable because of the upstream ephemeral resource schema."
+  "terraformRoot": "Each platform-apps/<service>/terraform directory is a deployment root. Backend settings are supplied at initialization; provider versions and lock files are committed.",
+  "examples": "Each service and language has a README and a parameter example under examples/platform. Bicep imports the local wrapper; Terraform runs the catalog root at the selected commit.",
+  "vmImage": "Both implementations use the image version recorded in catalog/platform.json. Its regional availability was checked through the Azure API; recheck availability before deploying.",
+  "tags": "The platform team supplies tags. Security settings are defined in the wrappers rather than exposed as developer configuration.",
+  "runtime": "Web App uses NODE|24-lts, with patching managed by Azure and application ZIP deployment authenticated through Entra ID. Container App uses the image digest and port in catalog/platform.json.",
+  "applicationPayload": "The Web App sample is a Node.js HTTP server with no external dependencies. Application releases are separate from infrastructure deployment so the infrastructure runner does not execute developer PR code.",
+  "validation": "scripts/tooling.mjs installs local tools and verifies their checksums. npm run iac:check compiles and validates the examples without deploying to Azure. Container Apps mock tests are limited by the upstream ephemeral resource schema."
 }

@@ -1,7 +1,7 @@
 using './main.bicep'
 
-// Compilation fixture, NOT authorization to deploy this example management range.
-// For a real deployment copy this file privately and replace both caller inputs.
+// Example values for compilation. Before deployment, use a local copy with
+// your management CIDR and SSH public key.
 param namePrefix = 'avmdemo'
 param location = 'swedencentral'
 param approvedManagementCidr = '10.41.0.0/24'

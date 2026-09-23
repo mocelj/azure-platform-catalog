@@ -21,7 +21,7 @@ function command(executable, args, cwd = root) {
   });
   if (result.error || result.status !== 0 || (args.includes('what-if') && result.stderr?.trim())) {
     appendFileSync(join(work, 'private-diagnostics.log'), `${executable}\n${result.error?.message ?? ''}\n${result.stdout ?? ''}\n${result.stderr ?? ''}\n`, { mode: 0o600 });
-    throw new Error('Connected command failed or what-if emitted diagnostics. Inspect the runner-local private diagnostics; no raw cloud output was published.');
+    throw new Error('An Azure command failed or what-if returned diagnostics. Review private-diagnostics.log on the runner; full output is kept out of public logs.');
   }
   return result.stdout;
 }
@@ -40,10 +40,10 @@ async function main() {
     repository: process.env.GITHUB_REPOSITORY, ref: process.env.GITHUB_REF, actor: process.env.GITHUB_ACTOR,
     operation: process.env.OPERATION, target: process.env.TARGET, consumerSha: process.env.CONSUMER_SHA,
     planId: process.env.PLAN_ID, enabled: process.env.ENABLE_AZURE_DEPLOYMENT
-  })) throw new Error('Connected execution is disabled.');
-  if (process.platform !== 'linux') throw new Error('The connected workflow requires the documented isolated Linux runner.');
+  })) throw new Error('Azure execution is disabled.');
+  if (process.platform !== 'linux') throw new Error('Run this workflow on the dedicated Linux runner with private network access.');
   if (!/^[0-9a-f]{40}$/.test(process.env.GITHUB_SHA ?? '') || !/^\d+_\d+$/.test(`${process.env.GITHUB_RUN_ID}_${process.env.GITHUB_RUN_ATTEMPT}`)) {
-    throw new Error('Expected an immutable catalog SHA and GitHub run identity.');
+    throw new Error('A full catalog commit SHA and GitHub run ID are required.');
   }
   const environment = JSON.parse(process.env.PLATFORM_ENVIRONMENT_JSON ?? '');
   validateEnvironment(environment, { live: true });
@@ -51,7 +51,7 @@ async function main() {
   if (process.versions.node !== toolchain.node) throw new Error('Private runner Node version does not match the release.');
   const cliVersion = JSON.parse(command(azure, ['version', '--output', 'json']))['azure-cli'];
   if (cliVersion !== toolchain.azureCli) throw new Error('Private runner Azure CLI version does not match the release.');
-  if (!existsSync(bicep) || !existsSync(terraform)) throw new Error('Private runner needs the checksum-pinned local IaC tools.');
+  if (!existsSync(bicep) || !existsSync(terraform)) throw new Error('Install the catalog toolchain on this runner with scripts/tooling.mjs.');
   const config = await fetchConsumer(process.env.CONSUMER_SHA, process.env.TARGET, process.env.GH_TOKEN);
   const deployment = render(config, process.env.TARGET, environment, work);
   const expected = {
@@ -97,7 +97,7 @@ async function main() {
     writeFileSync(join(work, 'plan.json'), JSON.stringify(plan), { mode: 0o600 });
     for (const name of Object.keys(savedFiles)) blob(environment, 'upload', `${planId}/${deployment.target}/${name}`, join(work, name));
     blob(environment, 'upload', `${planId}/${deployment.target}/plan.json`, join(work, 'plan.json'));
-    const summary = `Plan completed. plan_id=${planId}\nChange counts: ${JSON.stringify(counts)}\nRaw plan is in private Blob storage, not a public artifact. Apply requires environment approval and unchanged bindings.`;
+    const summary = `Plan completed. plan_id=${planId}\nChange counts: ${JSON.stringify(counts)}\nThe full plan is stored in the private Blob container. Review it before approving apply; the configuration and source revisions must still match.`;
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
   } else {
@@ -125,7 +125,7 @@ async function main() {
         '--name', `golden-path-${deployment.target}`, '--mode', 'Incremental', '--template-file', join(work, 'app.template.json'),
         '--parameters', `@${join(work, 'app.parameters.json')}`, '--only-show-errors', '--output', 'none']);
     }
-    console.log('Approved infrastructure apply completed. Perform the documented private-network smoke tests; application health is not implied.');
+    console.log('Infrastructure deployment completed. Next, check private connectivity and application health using the service guide.');
   }
 }
 

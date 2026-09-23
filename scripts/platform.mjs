@@ -16,7 +16,7 @@ export const canonical = (value) => JSON.stringify(value, (_, item) =>
 export const hash = (value) => createHash('sha256').update(typeof value === 'string' ? value : canonical(value)).digest('hex');
 
 export function targetParts(target) {
-  if (!catalog.targets.includes(target)) throw new Error('Target must be one of the eight platform-owned targets.');
+  if (!catalog.targets.includes(target)) throw new Error('Choose one of the eight targets listed in catalog/platform.json.');
   const engine = target.endsWith('-terraform') ? 'terraform' : 'bicep';
   return { engine, service: target.slice(0, -(engine.length + 1)) };
 }
@@ -24,7 +24,7 @@ export function targetParts(target) {
 export function validateConfig(config, target) {
   const { service } = targetParts(target);
   if (!configValidator(config)) throw new Error(`Configuration rejected: ${ajv.errorsText(configValidator.errors, { separator: '; ' })}`);
-  if (config.platformApp !== service) throw new Error('Configuration platformApp does not match the immutable deployment target.');
+  if (config.platformApp !== service) throw new Error('Configuration platformApp does not match the selected deployment target.');
   return config;
 }
 
@@ -32,7 +32,7 @@ export function validateCatalogPin(pin, expectedCommit) {
   if (!pin || Object.keys(pin).sort().join(',') !== 'commit,repository,version' ||
       pin.repository !== 'mocelj/azure-platform-catalog' || pin.version !== catalog.catalogVersion ||
       !/^[0-9a-f]{40}$/.test(pin.commit ?? '')) {
-    throw new Error('Consumer catalog-version.json must contain the approved repository, release version and an exact commit SHA.');
+    throw new Error('catalog-version.json must specify the catalog repository, release version and full commit SHA.');
   }
   if (expectedCommit && pin.commit !== expectedCommit) throw new Error('Consumer version file does not match the workflow catalog commit.');
 }
@@ -58,7 +58,7 @@ export function validateEnvironment(environment, { live = false } = {}) {
     throw new Error('A Log Analytics workspace resource ID is required.');
   }
   if (live && environment.subscriptionId === '00000000-0000-0000-0000-000000000000') {
-    throw new Error('Synthetic example bindings cannot be used for an Azure-connected operation.');
+    throw new Error('Synthetic example values cannot be used for deployment. Supply your environment configuration.');
   }
   return environment;
 }
@@ -150,7 +150,7 @@ export function run(args) {
       if (!existsSync(path)) throw new Error(`Missing consumer configuration: ${service}/${engine}`);
       validateConfig(readJson(path), target);
     }
-    console.log('All eight consumer configurations meet the approved contract. No Azure operation was performed.');
+    console.log('All eight application requests passed configuration validation.');
     return;
   }
   if (!['validate', 'render'].includes(command) || !options.config || !options.target) {
@@ -161,9 +161,9 @@ export function run(args) {
   if (command === 'render') {
     if (!options.environment || !options.out) throw new Error('render requires an explicit --environment file and --out directory.');
     const metadata = render(config, options.target, readJson(resolve(options.environment)), resolve(options.out));
-    console.log(`Rendered ${metadata.target}; configuration SHA256 ${metadata.configSha256}. No Azure operation was performed.`);
+    console.log(`Wrote deployment inputs for ${metadata.target}. Configuration SHA256: ${metadata.configSha256}. Azure was not contacted.`);
   } else {
-    console.log(`Approved configuration for ${options.target}. No Azure operation was performed.`);
+    console.log(`Configuration valid for ${options.target}.`);
   }
 }
 

@@ -1,28 +1,21 @@
-# Shared foundation: one owner, eight workload roots
+# Shared foundation
 
-**Implementation status:** these are deployment instructions, not a record of a live
-deployment. Offline compilation and tests cannot prove Azure policy, regional
-capacity, authorization, network reachability, or application health. No Azure
-resources are provisioned by repository validation.
+The foundation provides networking, DNS, identities, monitoring, and private
+Terraform state before workloads are deployed. The platform team manages it
+through `bootstrap\bicep\main.bicep`, using pinned official AVM modules at
+subscription and resource-group scopes. `shared.bicep` composes the shared
+resources; Terraform workload roots consume their IDs without managing them.
 
-On 2026-09-23, pinned Bicep **0.47.16** successfully restored and compiled
-`main.bicep`, `shared.bicep`, and `demo.bicepparam` with **zero warnings or errors**;
-all six foundation contract tests passed. No IaC fixes were required. This
-supersedes the earlier provisional 0.35.1 check, not the separate live-deployment
-approval and verification requirements. Compiler evidence and the refreshed
-recursive API inventory are in `catalog\bootstrap-dependencies.json`.
-
-The platform team owns `bootstrap\bicep\main.bicep`, the only shared-foundation
-deployment entrypoint. It composes **official, exact-version AVM modules** at
-subscription and resource-group scopes. `shared.bicep` is a local composition, not
-a replacement resource implementation. Terraform consumes the resulting IDs; it
-does not create, adopt, import, or destroy the foundation.
+The foundation and parameter example compile with Bicep `0.47.16` without warnings,
+and the six foundation contract tests pass. The dependency and API inventory is
+in `catalog\bootstrap-dependencies.json`. Azure deployment and connectivity
+verification remain outstanding; the preparation steps below cover that work.
 
 ## Ownership and topology
 
-The default prefix creates `rg-avmdemo-demo-shared` plus **eight different workload
-resource groups**, one for each target in `catalog\platform.json`. Bicep and
-Terraform never own the same workload resource. The shared group contains:
+The default prefix creates `rg-avmdemo-demo-shared` and eight workload resource
+groups, one per target in `catalog\platform.json`. This keeps Bicep and Terraform
+ownership separate. The shared group contains:
 
 | Resource | Configuration |
 | --- | --- |
@@ -31,147 +24,134 @@ Terraform never own the same workload resource. The shared group contains:
 | Private-endpoint subnet | `10.40.2.0/24`; no delegation; private endpoint network policies disabled deliberately |
 | Web App integration | `10.40.3.0/24`; `Microsoft.Web/serverFarms` delegation; NAT |
 | Container Apps Bicep | `10.40.4.0/24`; `Microsoft.App/environments` delegation; NAT |
-| Container Apps Terraform | `10.40.5.0/24`; **separate** `Microsoft.App/environments` delegation; NAT |
+| Container Apps Terraform | `10.40.5.0/24`; separate `Microsoft.App/environments` delegation; NAT |
 | Egress | Standard NAT Gateway plus static IPv4 Standard/Regional public IP, both logical zone `1` by default |
 | DNS | `privatelink.blob.core.windows.net`, `privatelink.azurewebsites.net`, `privatelink.swedencentral.azurecontainerapps.io`; VNet links with auto-registration off |
 | Monitoring | Log Analytics, 30-day retention; public ingestion/query explicitly enabled |
 | State and plans | Private Blob endpoint, Entra-only clients, `tfstate` and `plans` containers |
 | Deployment identities | Separate UAMIs for GitHub environments `demo-plan` and `demo-apply` |
 
-An ACA environment requires an **exclusive** infrastructure subnet. The two
-engines must not reuse one subnet: the environment resource is independent for
-each target. This is the workload-profiles architecture (supports NAT and Private
-Link), not the legacy consumption-only environment. `/24` leaves growth room
-above the workload-profiles `/27` minimum. The shared Web App integration `/24`
-can host the demo's two plans under App Service multi-plan subnet join; the
-private-endpoint subnet remains separate from integration.
+Each Container Apps environment needs its own infrastructure subnet. The two
+targets use workload-profiles environments, which support NAT and Private Link,
+rather than the legacy consumption-only architecture. The `/24` allocation leaves
+room above the `/27` minimum. Web App's two plans share an integration `/24` using
+multi-plan subnet join; inbound private endpoints use a different subnet.
 
-NAT is **outbound connectivity, not a firewall**, destination allowlist, or
-exfiltration control. It is not an inbound management address. Four supported
-workload subnets explicitly reference the NAT resource through the AVM VNet
-`subnets[].natGatewayResourceId` interface. Web App must route outbound application
-traffic through VNet integration. Container Apps workload profiles must be used.
-Image pulls, OS updates, GitHub, Azure control plane, and Azure Monitor still need
-approved outbound access. A production landing zone should supply inspected,
-filtered egress; it is not secretly implemented in this demo.
+Four workload subnets reference NAT through AVM's
+`subnets[].natGatewayResourceId` interface. Web App routes outbound traffic through
+VNet integration, while Container Apps uses workload profiles. NAT supplies an
+outbound address, not an inbound management endpoint or a filtering firewall.
+Image pulls, OS updates, GitHub, Entra, Azure management, and monitoring still
+need outbound access. Use the production landing zone's inspection and filtering
+services where those are required.
 
-The VM NSG allows TCP/22 only from `approvedManagementCidr`, then denies **all**
-other inbound traffic before default VNet allow rules. That input has no default
-in the root and must be an approved RFC1918 IPv4 CIDR. Validation rejects public
-ranges, `0.0.0.0/0`, and over-broad ranges spanning outside RFC1918. The fixture
-`10.41.0.0/24` is illustrative, not an approved live network.
+The VM NSG permits TCP/22 from `approvedManagementCidr` and denies other inbound
+traffic before the default VNet rules. This required input accepts an RFC1918
+IPv4 CIDR; public ranges, `0.0.0.0/0`, and ranges extending outside RFC1918 are
+rejected. Replace the example `10.41.0.0/24` with the actual management source.
 
-## Private runner, management routes, and DNS are prerequisites
+## Runner connectivity and DNS
 
-This bootstrap does **not** create a runner, jump host, VPN, ExpressRoute,
-peering, resolver, public SSH endpoint, or customer firewall changes. Before
-connected operations, the separately administered runner/client network needs:
+Runner hosting, management access, peering/VPN/ExpressRoute, DNS resolvers, and
+customer firewall changes sit outside this bootstrap. The existing runner and
+client networks need:
 
-1. Nonoverlapping address space, private routing to `10.40.0.0/16`, return routes,
-   and approved peering/VPN/ExpressRoute settings. The management source seen by
-   the VM must fall within the caller-approved CIDR.
-2. Private DNS resolution. VNet peering does **not** propagate DNS-zone links.
-   Link the existing runner VNet to the zones under its owner-approved process,
-   or use a DNS resolver/conditional forwarding path into the linked demo VNet.
+1. Nonoverlapping address space, routes to `10.40.0.0/16`, and return routes. The
+   source address seen by the VM must fall within the management CIDR.
+2. Private DNS resolution. VNet peering does not propagate DNS-zone links.
+   Link the runner VNet to the zones through its normal administration process,
+   or use a resolver/conditional forwarding path into the linked demo VNet.
    On-premises clients cannot use Azure's VNet DNS IP directly without a resolver.
-3. TCP/443 to private Blob endpoints and private app/SCM endpoints. Verify
+3. TCP/443 to private Blob and app/SCM endpoints. Verify
    `<account>.blob.core.windows.net` resolves to the private endpoint address;
    likewise the Web App and ACA canonical FQDNs.
 4. Outbound access to GitHub, Entra token exchange, Azure Resource Manager,
    module/provider registries, required image registries, and the explicitly
-   permitted public Azure Monitor endpoints. Do not run consumer build scripts
-   or fork PR code on the privileged runner.
+   permitted public Azure Monitor endpoints.
 
-For Web App, the private DNS zone group adds **both** `<app>` and `<app>.scm` A
+For Web App, the private DNS zone group adds both `<app>` and `<app>.scm` A
 records in `privatelink.azurewebsites.net`. The second is essential for private
 Kudu/SCM release operations when basic publishing authentication is disabled.
 Use the canonical `<app>.azurewebsites.net` and `<app>.scm.azurewebsites.net`
-hostnames for TLS; do not browse the private IP or replace certificate validation.
+hostnames so TLS certificate validation works.
 Validate both records, including equivalent records when using customer DNS.
 
-Private Blob storage means a normal public GitHub-hosted runner **cannot**
-initialize the Terraform backend or read saved plans. The catalog-owned,
-isolated runner executes only maintainer-approved trusted jobs. Public-repository
-self-hosted runners remain a disposable-demo exception, not an FSI production
-recommendation.
+The private backend and plan store are not reachable from a standard
+GitHub-hosted runner. The catalog's isolated runner handles those operations and
+does not run consumer build scripts or fork PR code. Its registration in a public
+repository is a demo exception; production should use a private execution
+repository and restricted runner group.
 
 ## Identity and least privilege
 
-The initial bootstrap operator is authorized **separately by the user**. It needs
-subscription deployment/resource-group creation, resource provisioning in the
-nine groups, and the ability to assign the scoped roles below. A separately
-approved combination such as Contributor plus RBAC Administrator for bootstrap
-is possible, with further organizational scoping/conditions. The routine
-workflow identities do **not** receive subscription Owner, subscription
-Contributor, or unrestricted subscription role-assignment rights.
+Bootstrap requires broader permissions than routine workload deployment: creating
+resource groups, provisioning within the nine groups, and assigning the roles
+below. An operator may use Contributor plus RBAC Administrator, subject to
+organizational scoping and conditions. The routine workflow identities receive
+neither subscription Owner/Contributor nor subscription-wide role-assignment
+rights.
 
 The identity federation issuer is `https://token.actions.githubusercontent.com`,
-audience `api://AzureADTokenExchange`, and subjects are exactly:
+audience `api://AzureADTokenExchange`, and subjects are:
 
 - `repo:mocelj/azure-platform-catalog:environment:demo-plan`
 - `repo:mocelj/azure-platform-catalog:environment:demo-apply`
 
-Protect these catalog GitHub environments, limit dispatch/runner use to
-maintainers, and use `deploymentIdentities` outputs to configure each environment's
-Azure client ID. No consumer-repository subject, branch wildcard, client secret,
-or private SSH key is created. Solo-presenter approval is not independent
-separation of duties.
+Configure the two GitHub environments with branch restrictions and maintainers'
+deployment permissions, using `deploymentIdentities` outputs for their client
+IDs. Federation is environment-scoped rather than granted to the consumer
+repository or a branch wildcard. It needs no client secret or private SSH key.
+Independent approval requires a second reviewer; the solo-presenter setup does
+not provide separation of duties.
 
 | Grant | Scope and reason |
 | --- | --- |
-| Contributor | Each of the eight workload RGs, both identities. ARM what-if needs deployment/write permissions, not just Reader; therefore the plan identity is **not read-only**. |
+| Contributor | Both identities, on each workload RG. ARM what-if requires deployment/write permissions, so the plan identity is not read-only. |
 | Reader | Shared RG only, for discovery and destination/subnet/workspace metadata. |
-| Network Contributor | The five exact shared subnets, not the subscription/VNet/RG. Supports NIC joins, private endpoint joins, and delegated integration. This built-in role also permits subnet modification; trust/isolation of the catalog code is essential. |
-| Private DNS Zone Contributor | Each of the three exact zones, for endpoint DNS-zone groups and records. It can modify records in those zones; this is shared demo infrastructure, not tenant-wide DNS. |
-| Storage Blob Data Contributor | **Only** `tfstate` and `plans` containers, not all subscription storage. Both phases need Blob read/write and state-lease locking. ARM Reader alone cannot initialize/lock a backend. |
+| Network Contributor | The five shared subnets, for NIC/endpoint joins and delegated integration. The role also permits subnet changes, which makes protected catalog code and runner isolation important. |
+| Private DNS Zone Contributor | The three private zones, for endpoint zone groups and records. This is zone-scoped rather than tenant-wide DNS access. |
+| Storage Blob Data Contributor | The `tfstate` and `plans` containers. Both phases need read/write and state leases; ARM Reader does not provide data-plane access. |
 
-Do not infer that Contributor includes `Microsoft.Authorization/roleAssignments/write`.
-Only bootstrap creates the routine identity grants above. Any workload AVM that
-actually creates data-role assignments must have an explicitly reviewed,
-conditioned role-assignment grant at its dedicated RG; never solve that with
-subscription Owner. Review the current workload dependency manifest and actual
-compiled role assignments before connected planning.
-The current workload contract exposes no role-assignment passthrough and requests
-no workload role grants, so no routine RBAC Administrator grant is needed. If a
-future catalog version adds one, constrain **both write and delete** to the exact
-data-role IDs and intended principals/types at that one workload RG using AVM's
-`condition`/`conditionVersion` inputs. Do not give either phase authority to
-grant Owner, Contributor, or RBAC Administrator to itself.
+Contributor does not include `Microsoft.Authorization/roleAssignments/write`.
+The current workloads request no role grants, so the routine identities do not
+need RBAC Administrator. If a future wrapper adds data-role assignments, review
+the compiled assignments and grant conditioned write/delete access at that
+workload RG. AVM's `condition` and `conditionVersion` inputs can restrict the role
+IDs and principals. Neither workflow phase should be able to elevate itself to
+Owner, Contributor, or RBAC Administrator.
 
-Azure Monitor public ingestion/query is an **approved demo exception**. No AMPLS
-is deployed and no raw ARM/CLI workaround is used. Workspace local authentication
-is disabled; workload diagnostics must use Azure Monitor diagnostic settings,
-not embedded workspace shared keys. Microsoft-managed encryption is used;
-`forceCmkForQuery: false` does not pretend customer-managed keys were configured.
+Azure Monitor uses public ingestion/query endpoints; no AMPLS is deployed.
+Workspace local authentication is disabled, and diagnostics use Azure Monitor
+settings rather than embedded workspace keys. Encryption uses Microsoft-managed
+keys, with `forceCmkForQuery: false`. Private monitoring or customer-managed keys
+would require a separate production design.
 
 ## State, plans, and recovery
 
-The state account explicitly disables Shared Key, public network access, anonymous
+The state account disables Shared Key, public network access, anonymous
 Blob access, local users, and cross-tenant replication. HTTPS and TLS 1.2 are
 required, infrastructure encryption is enabled, and the private endpoint exposes
 only Blob. Containers use `publicAccess: None`. Blob versioning, Blob soft delete,
-and container soft delete have 14-day retention. This is recovery protection,
-**not** immutable/WORM storage; immutability would interfere with state updates.
+and container soft delete have 14-day retention. These controls support recovery;
+WORM immutability would prevent normal state updates and is not enabled.
 Blob audit diagnostics go to the shared workspace.
 
 State keys are deterministic and separate from workload names:
 `demo/<service>-terraform/<instance>.tfstate`; for example
-`demo/storage-terraform/hello.tfstate`. Never point two targets or instances at
-one key. Bicep has no Terraform state key. Preserve Blob lease locking, set
-workflow concurrency per target/instance, and never use `-lock=false` or routine
-force-unlock. Shared resources are absent from every workload state.
+`demo/storage-terraform/hello.tfstate`. Each target and instance needs a separate
+key; Bicep does not use Terraform state. Blob leases and target-level workflow
+concurrency protect against overlapping operations. Disabled locking and routine
+force-unlock would remove that protection. Workload states exclude shared resources.
 
-Saved plans contain sensitive data even with secret outputs suppressed. Store
-them only in the private `plans` container with the trusted configuration hash,
-consumer SHA, catalog SHA, environment hash, target, and toolchain binding. Do not
-publish plans/state as public workflow artifacts. Define short plan validity and
-delete expired plans through an approved maintenance operation; Blob versions and
-soft-deleted copies persist through the retention period and must be included in
-retention/cleanup reviews.
+Saved plans can contain sensitive values even when outputs are suppressed. Keep
+them in the private `plans` container with configuration/environment hashes,
+source SHAs, target, and toolchain metadata. Plan validity and expiry cleanup
+should be part of operations. Blob versions and soft-deleted copies remain
+subject to retention, so deleting the active plan is not necessarily final disposal.
 
-## Read-only preflight, then separately approved bootstrap
+## Prepare and deploy the foundation
 
-From the repository root in PowerShell, first compile **without deploying**:
+Compile and run the foundation tests from the repository root:
 
 ```powershell
 .\.tools\bicep.exe build .\bootstrap\bicep\main.bicep --stdout > $null
@@ -179,16 +159,14 @@ From the repository root in PowerShell, first compile **without deploying**:
 node --test .\tests\foundation.test.mjs
 ```
 
-The example metadata uses only the zero subscription UUID and a newly generated
-public SSH fixture. Its private key was never saved and it is not usable for
-live management. `demo.bicepparam` is a compilation example using this binding;
-copy it to a protected, untracked file and replace the SSH public key and approved
-management CIDR before a real bootstrap. Verify naming, overlap, logical zone,
-provider registration, subscription policy, regional SKUs, quotas, and the
-precise image from the workload catalog. Do not silently register providers or
-modify the subscription as part of preflight.
+`demo.bicepparam` uses a zero subscription UUID and a test SSH public key for
+compilation. Copy it to a protected, untracked file and supply the subscription,
+public key, and management CIDR for your environment. Check address overlap,
+naming, logical zones, provider registration, policy, SKUs, quota, and the catalog
+image version before bootstrap. Provider registration and other subscription
+changes belong in the customer's administration process, not a read-only check.
 
-Read-only examples, after interactive operator authentication:
+The following queries help with that review after operator authentication:
 
 ```powershell
 az account show --query '{subscription:id,tenant:tenantId,name:name}' -o json
@@ -205,15 +183,14 @@ az vm list-skus --location swedencentral --resource-type virtualMachines --all -
 az role assignment list --assignee $BootstrapOperatorObjectId --include-inherited --all -o json
 ```
 
-Catalog preflight and read-only Azure views cannot guarantee deployment
-success/capacity. `az deployment sub what-if` does not provision resources, but
-needs Azure permissions and may record a deployment operation; run it **only**
-after separate authorization, against the reviewed AVM entrypoint. A future
-authorized bootstrap uses `az deployment sub create --location swedencentral
---parameters <private-copy.bicepparam>`; do not create the resources individually
-with CLI commands. This document does not authorize running it.
+Run `az deployment sub what-if` against the foundation entrypoint once the
+scope and permissions are agreed. What-if does not provision resources, but it
+requires Azure permissions and may record a deployment operation; it also cannot
+reserve regional capacity. Bootstrap uses `az deployment sub create --location swedencentral
+--parameters <private-copy.bicepparam>` through the AVM composition rather than
+individual CLI resource-creation commands.
 
-After that separately approved operation, read the existing deployment outputs:
+After deployment, extract the environment bindings:
 
 ```powershell
 $Outputs = az deployment sub show --name $BootstrapDeploymentName --query properties.outputs -o json | ConvertFrom-Json
@@ -223,16 +200,16 @@ $Outputs.deploymentIdentities.value
 node --input-type=module -e "import {readJson,validateEnvironment} from './scripts/platform.mjs'; validateEnvironment(readJson(process.argv[1]),{live:true});" $PrivateEnvironmentFile
 ```
 
-Only `environmentMetadata.value` belongs in the environment JSON schema. Identity
-configuration and `foundationResourceIds` are separate non-secret operator
-outputs. Never append unrecognized properties to that schema or copy raw
-deployment output dumps. AVM internals expose some `@secure()` outputs; the
-first-party compositions never consume or forward storage/workspace keys.
+Use `environmentMetadata.value` as the environment JSON. Identity configuration
+and `foundationResourceIds` are separate operator outputs. Keeping these separate
+allows schema validation and avoids retaining unnecessary deployment output.
+The compositions do not consume or forward the secure storage/workspace keys
+available from some AVM internals.
 
 ### Entra-only Terraform backend
 
-Use the catalog renderer to produce `backend.hcl` and target variables from a
-validated configuration and private environment file. The backend must contain:
+The renderer produces `backend.hcl` and target variables from the application
+configuration and private environment file. The backend has this shape:
 
 ```hcl
 resource_group_name  = "rg-avmdemo-demo-shared"
@@ -243,63 +220,56 @@ use_oidc             = true
 use_azuread_auth      = true
 ```
 
-These are data/configuration fields, not Azure resource declarations. In a
-protected GitHub Environment job, set `ARM_CLIENT_ID`, `ARM_TENANT_ID`,
-`ARM_SUBSCRIPTION_ID`, `ARM_USE_OIDC=true`, and `ARM_USE_AZUREAD=true`; grant only
-the trusted job `id-token: write`. The azurerm backend obtains the GitHub OIDC
-token from the job environment. Do not print tokens or use `ARM_ACCESS_KEY`,
-SAS, publishing profiles, or key-list fallback.
+The GitHub Environment job supplies `ARM_CLIENT_ID`, `ARM_TENANT_ID`,
+`ARM_SUBSCRIPTION_ID`, `ARM_USE_OIDC=true`, and `ARM_USE_AZUREAD=true`.
+Its `id-token: write` permission lets the backend obtain a GitHub OIDC token.
+This path uses Entra authorization rather than `ARM_ACCESS_KEY`, SAS, or key
+listing; tokens stay in the job environment.
 
 ```powershell
 # Future connected operation only; requires the private runner and approved identity.
 .\.tools\terraform.exe -chdir=platform-apps\storage\terraform init -input=false -lockfile=readonly -backend-config=$PrivateBackendFile
 ```
 
-Allow for Entra/RBAC propagation; failure is not permission to enable public
-storage or Shared Key. An interactive CLI login is not a substitute for the
-documented OIDC backend path.
+Allow for Entra/RBAC propagation when diagnosing initial access failures. Check
+DNS, scope, and token configuration rather than enabling public storage or Shared
+Key. An interactive CLI login exercises a different authentication path from OIDC.
 
-## Existing-foundation mode: validate, do not adopt
+## Using an existing foundation
 
-Do **not** run `bootstrap\bicep\main.bicep` against a customer foundation. Instead,
-the platform owner supplies an environment JSON conforming exactly to
-`schemas\environment.schema.json`. `validateEnvironment(..., {live:true})`
-checks shape, subscription consistency, eight separate RG names, five distinct
-subnet IDs, expected zone names, and rejects the zero-UUID fixture. Validation is
-input checking, **not** evidence of Azure configuration or ownership.
+For an existing customer foundation, skip `bootstrap\bicep\main.bicep`. Supply
+environment JSON matching `schemas\environment.schema.json`.
+`validateEnvironment(..., {live:true})` checks subscription consistency, eight
+resource groups, five distinct subnets, and expected zone names, and rejects the
+zero-UUID example. These checks validate inputs, not the resources behind the IDs.
 
-Through separately authorized **read-only** preflight, prove those resources
-exist and satisfy the network/delegation/NAT-or-approved-filtered-egress,
+Use read-only preflight to verify that the resources exist and meet the
+network/delegation/NAT-or-filtered-egress,
 NSG/management, private DNS, workspace, storage, state-container, and identity
 requirements above. Examples include `az network vnet subnet show --ids`,
 `az network private-dns link vnet list`, `az network private-endpoint show`,
 `az storage account show`, `az storage account blob-service-properties show`,
 `az storage container show --auth-mode login`, `az monitor log-analytics
-workspace show`, and `az role assignment list`. Perform private DNS resolution
-and TCP/TLS tests **from the approved runner**. JSON schema validation alone
-cannot verify these properties.
+workspace show`, and `az role assignment list`. Run private DNS and TCP/TLS
+checks from the deployment runner, where the connectivity is needed.
 
-Customer administrators establish any missing routing, DNS, federation, or
-scoped RBAC under their normal change process. Never import their foundation
-into Terraform, redeploy our VNet over theirs, change their subnet settings,
-or delete their shared resources. If the required contract cannot be met,
-stop connected deployment; do not silently weaken the contract.
+Customer administrators handle any required routing, DNS, federation, or RBAC
+changes. The catalog does not import their foundation into Terraform, redeploy
+its network, alter its subnets, or delete its resources. Deployment waits until
+the environment meets the workload requirements.
 
 ## Cleanup order
 
-Cleanup is a separately authorized destructive operation, never a validation
-step. Freeze dispatches and wait for active jobs/leases. Destroy each Terraform
-workload from its own root/key while the backend, runner, DNS, identities, and
-network still exist; remove only Bicep-owned workload RGs through the reviewed
-operator process. Verify all eight workload groups are empty/gone and remove
-workload private endpoints before deleting DNS/network dependencies. Keep a
-protected final state/evidence backup and satisfy retention obligations.
+Freeze dispatches and wait for active jobs and leases before cleanup. Destroy each
+Terraform workload using its own root and state key while the backend, runner,
+DNS, and identities remain available. Remove the Bicep workload groups through
+the platform operator process.
 
-Then revoke workload grants/federations, retire the demo runner's links/peering
-through its owner, and delete the demo shared foundation **last**. Never delete
-the state account before Terraform cleanup. Soft-delete/version retention may
-require a delayed final purge approved by the owner. Existing customer foundation
-resources are **excluded** from cleanup.
+Check that the workload groups and private endpoints are gone before removing
+shared dependencies. Retain the required state and audit records, then revoke
+demo access, retire runner connectivity, and remove the demo foundation last.
+Account for soft-delete/version retention in final disposal. Customer-owned
+foundation resources are outside this cleanup scope.
 
 ## References and compatibility
 

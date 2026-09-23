@@ -23,14 +23,14 @@
     "architecture": "x64",
     "hyperVGeneration": "V2",
     "securityType": "TrustedLaunchSupported",
-    "availabilityEvidence": "Read-only Microsoft.Compute image-version API in swedencentral, API version 2024-03-01; no deployment performed."
+    "availabilityEvidence": "Image availability and compatibility were checked through the Microsoft.Compute API (2024-03-01) in swedencentral. The image has not been deployed as part of this example."
   },
   "demoExceptions": [
-    "Public Azure Monitor connectivity",
-    "NAT egress is not a destination-filtering firewall",
-    "Pinned preview APIs in upstream AVM",
-    "Solo-presenter approval is not independent separation of duties",
-    "Public-repository private runner is a disposable-demo-only exception",
-    "Microsoft hello-world image is illustrative, not FSI-hardened"
+    "Azure Monitor uses public endpoints in this demo.",
+    "NAT provides outbound connectivity but does not filter destinations.",
+    "Some pinned AVM modules use preview APIs.",
+    "The presenter can approve deployment; production separation of duties requires another reviewer.",
+    "The public-repository runner is intended for a disposable demo environment, not a customer network.",
+    "The Microsoft hello-world image demonstrates the deployment flow; it is not a hardened FSI application image."
   ]
 }

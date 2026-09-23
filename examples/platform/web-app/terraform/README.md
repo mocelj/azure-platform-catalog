@@ -1,9 +1,11 @@
-# Run the private Web App Terraform example
+# Private Web App with Terraform
 
-See [the Web App contract](../../../../platform-apps/web-app/terraform/README.md).
-The `.example.tfvars.json` is synthetic. Bind it to the approved site PE subnet,
-site/SCM private DNS, separate delegated integration subnet with NAT, and
-workspace. B1/B2 Linux plans are deliberately small demo tiers.
+This example uses the [Web App root](../../../../platform-apps/web-app/terraform/README.md)
+with a B1 or B2 Linux plan. The example variable file contains placeholders.
+For deployment, supply the endpoint subnet, site/SCM DNS zone, separate
+delegated integration subnet with NAT, and workspace IDs.
+
+## Local validation
 
 From the catalog root:
 
@@ -16,17 +18,17 @@ $Root = (Resolve-Path .\platform-apps\web-app\terraform).Path
 & $Tf "-chdir=$Root" test "-var-file=../../../examples/platform/web-app/terraform/.example.tfvars.json"
 ```
 
-These checks are offline except public dependency downloads, not Azure
-deployments. The trusted application release is separate: reviewed
-dependency-free `server.js` ZIP, Entra deployment and **private SCM** connectivity.
-Basic publishing stays disabled. Never execute consumer build scripts on the
-privileged infrastructure runner. `NODE|24-lts` receives Azure-managed patches.
+The commands restore dependencies and validate configuration without deploying.
+Application content is released separately as a reviewed `server.js` ZIP over
+private SCM using Entra authentication. Basic publishing remains disabled, and
+consumer builds run outside the infrastructure runner. App Service manages
+patches within the configured `NODE|24-lts` runtime family.
 
-## Future approved Entra/OIDC backend setup
+## Connect to the private backend
 
-Use the existing isolated runner with private Blob networking/DNS. It needs
-state-container-scoped `Storage Blob Data Contributor`, separately from workload
-resource permissions. The approved workflow supplies `ARM_CLIENT_ID`,
+Use the existing private runner with Blob networking/DNS. It needs
+`Storage Blob Data Contributor` on the state container, in addition to workload
+resource permissions. The catalog workflow supplies `ARM_CLIENT_ID`,
 `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID` and OIDC request variables (`id-token: write`).
 
 ```powershell
@@ -44,8 +46,13 @@ $State = Get-Content .\environments\demo.local.json -Raw | ConvertFrom-Json
   "-backend-config=subscription_id=$env:ARM_SUBSCRIPTION_ID"
 ```
 
-The binding is platform-owned local metadata; use approved rendered tfvars in
-the separate connected plan/apply workflow. Do not disable state locking, expose
-public endpoints or fall back to keys/SAS. Saved plans/state remain private.
-Cleanup requires a reviewed target-only destroy plan that removes both site
-and its billable dedicated service plan, preserving foundation and other targets.
+Keep the environment binding local and use the
+[catalog plan/apply workflow](../../../../docs/rehearsal.md#maintainer-handoff)
+with rendered variables. The private backend uses Entra authorization and locking;
+state and saved plans stay out of public artifacts.
+
+## Cleanup
+
+Review a destroy plan that removes both the site and its dedicated App Service
+plan. The plan remains billable even when the sample has no traffic. Preserve
+shared infrastructure and the other targets.

@@ -1,27 +1,27 @@
 variable "name" {
   type        = string
-  description = "Approved instance name."
+  description = "Application name used for the virtual machine."
   nullable    = false
   validation {
     condition     = can(regex("^[a-z][a-z0-9-]{2,19}$", var.name))
-    error_message = "name must match the platform application naming contract."
+    error_message = "name must be 3-20 lowercase letters, digits or hyphens, starting with a letter."
   }
 }
 
 variable "location" {
   type        = string
-  description = "Approved Azure region."
+  description = "Azure region used by this example."
   default     = "swedencentral"
   nullable    = false
   validation {
     condition     = var.location == "swedencentral"
-    error_message = "Only swedencentral is approved."
+    error_message = "This example is configured for swedencentral."
   }
 }
 
 variable "size" {
   type        = string
-  description = "Approved capacity tier: small or medium."
+  description = "VM tier: small uses Standard_D2as_v5; medium uses Standard_D4as_v5."
   nullable    = false
   validation {
     condition     = contains(["small", "medium"], var.size)
@@ -31,17 +31,17 @@ variable "size" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Existing, Terraform-target-specific workload resource group."
+  description = "Existing resource group assigned to this Terraform instance."
   nullable    = false
   validation {
     condition     = can(regex("^rg-[a-z0-9-]{3,70}$", var.resource_group_name))
-    error_message = "Use a platform-owned rg- resource group."
+    error_message = "Use the rg- resource group assigned to this instance by the platform team."
   }
 }
 
 variable "log_analytics_workspace_resource_id" {
   type        = string
-  description = "Existing platform Log Analytics workspace ARM resource ID."
+  description = "Resource ID of the shared Log Analytics workspace."
   nullable    = false
   validation {
     condition     = can(regex("(?i)^/subscriptions/[0-9a-f-]{36}/resourceGroups/[^/]+/providers/Microsoft.OperationalInsights/workspaces/[^/]+$", var.log_analytics_workspace_resource_id))
@@ -51,13 +51,13 @@ variable "log_analytics_workspace_resource_id" {
 
 variable "tags" {
   type        = map(string)
-  description = "Platform-owned metadata; mandatory tags are enforced by the wrapper."
+  description = "Additional resource tags. The wrapper retains the required catalog tags."
   nullable    = false
 }
 
 variable "subnet_resource_id" {
   type        = string
-  description = "Private VM subnet; platform NSG and NAT-backed egress must already exist."
+  description = "Resource ID of the VM subnet, with its NSG and NAT egress already configured."
   nullable    = false
   validation {
     condition     = can(regex("(?i)^/subscriptions/[0-9a-f-]{36}/resourceGroups/[^/]+/providers/Microsoft.Network/virtualNetworks/[^/]+/subnets/[^/]+$", var.subnet_resource_id))
@@ -67,10 +67,10 @@ variable "subnet_resource_id" {
 
 variable "ssh_public_key" {
   type        = string
-  description = "Platform operator SSH public key. Never supply a private key."
+  description = "SSH public key for VM access. Keep the private key on the management host."
   nullable    = false
   validation {
     condition     = can(regex("^ssh-(rsa|ed25519) [A-Za-z0-9+/=]+( [^\\r\\n]+)?$", var.ssh_public_key))
-    error_message = "Supply an OpenSSH RSA or Ed25519 public key, never a private key."
+    error_message = "Supply an OpenSSH RSA or Ed25519 public key."
   }
 }

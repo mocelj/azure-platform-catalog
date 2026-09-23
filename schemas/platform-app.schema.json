@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:avm-demo:platform-app:1.0",
-  "title": "Approved platform application request",
+  "title": "Developer request for a platform app",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "platformApp", "name", "environment", "size"],
