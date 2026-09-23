@@ -1,5 +1,7 @@
 # Azure platform catalog
 
+[![Catalog validation](https://github.com/mocelj/azure-platform-catalog/actions/workflows/validate.yml/badge.svg)](https://github.com/mocelj/azure-platform-catalog/actions/workflows/validate.yml)
+
 **Official Azure Verified Modules are the building blocks. A platform app is the approved product developers consume.**
 
 This catalog composes AVM into eight opinionated examples: Blob Storage, Linux VM, Azure Web App, and Azure Container App, each in Bicep and Terraform. The companion [application repository](https://github.com/mocelj/azure-platform-app-demo) requests them through five-field JSON files. Developers do not supply IaC, networking, identities, or security switches.
@@ -32,7 +34,7 @@ npm run iac:check
 
 Tool/module/provider downloads require network access. “Offline” here means **no Azure deployment or private state access**, not an air-gapped dependency restore. Tooling is kept in `.tools`, not installed globally. See [dependencies](docs/dependencies.md) and [validation gates](docs/rehearsal.md).
 
-Pinned Bicep compilation and all four Terraform roots' backend-disabled initialization/validation now have local evidence. Storage, VM, and Web App have nine passing mocked plan runs in total. Container Apps has **no mocked plan coverage**; its evidence is Node source-contract checks plus real Terraform initialization/validation. The [validation guide](docs/rehearsal.md#recorded-local-evidence-and-limits) explains that limitation and accepted VM provider warnings. Publication and hosted CI remain pending; this is not a release claim.
+Pinned Bicep compilation and all four Terraform roots' backend-disabled initialization/validation have local and hosted CI evidence. Storage, VM, and Web App have nine passing mocked plan runs in total. Container Apps has **no mocked plan coverage**; its evidence is Node source-contract checks plus real Terraform initialization/validation. The [validation guide](docs/rehearsal.md#recorded-local-evidence-and-limits) explains that limitation and accepted VM provider warnings. The Actions badge reports current offline validation, not Azure deployment or private-network health.
 
 ## Eight examples, one developer contract
 
