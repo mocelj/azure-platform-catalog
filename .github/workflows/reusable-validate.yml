@@ -38,3 +38,5 @@ jobs:
         working-directory: catalog
       - run: node scripts/platform.mjs check-consumer --directory ../consumer
         working-directory: catalog
+        env:
+          CATALOG_COMMIT: ${{ inputs.catalog_sha }}

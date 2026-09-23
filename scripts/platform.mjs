@@ -28,6 +28,15 @@ export function validateConfig(config, target) {
   return config;
 }
 
+export function validateCatalogPin(pin, expectedCommit) {
+  if (!pin || Object.keys(pin).sort().join(',') !== 'commit,repository,version' ||
+      pin.repository !== 'mocelj/azure-platform-catalog' || pin.version !== catalog.catalogVersion ||
+      !/^[0-9a-f]{40}$/.test(pin.commit ?? '')) {
+    throw new Error('Consumer catalog-version.json must contain the approved repository, release version and an exact commit SHA.');
+  }
+  if (expectedCommit && pin.commit !== expectedCommit) throw new Error('Consumer version file does not match the workflow catalog commit.');
+}
+
 export function validateEnvironment(environment, { live = false } = {}) {
   if (!environmentValidator(environment)) throw new Error(`Environment rejected: ${ajv.errorsText(environmentValidator.errors, { separator: '; ' })}`);
   if (new Set(Object.values(environment.resourceGroups)).size !== 8) throw new Error('Each service/engine target must have its own resource group.');
@@ -134,6 +143,7 @@ export function run(args) {
   const { command, options } = parseArguments(args);
   if (command === 'check-consumer') {
     if (!options.directory) throw new Error('--directory is required.');
+    validateCatalogPin(readJson(join(resolve(options.directory), 'catalog-version.json')), process.env.CATALOG_COMMIT);
     for (const target of catalog.targets) {
       const { service, engine } = targetParts(target);
       const path = join(resolve(options.directory), 'apps', service, engine, 'platform-app.json');

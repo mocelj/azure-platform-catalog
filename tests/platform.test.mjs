@@ -1,11 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { bind, canonical, catalog, hash, parseArguments, readJson, root, validateConfig, validateEnvironment } from '../scripts/platform.mjs';
+import { bind, canonical, catalog, hash, parseArguments, readJson, root, validateCatalogPin, validateConfig, validateEnvironment } from '../scripts/platform.mjs';
 import { join } from 'node:path';
 
 const config = { schemaVersion: '1.0', platformApp: 'storage', name: 'ledger', environment: 'demo', size: 'small' };
 const environment = () => readJson(join(root, 'environments', 'demo.example.json'));
 
+test('consumer release metadata must match the immutable workflow pin', () => {
+  const pin = { repository: 'mocelj/azure-platform-catalog', version: '0.1.0', commit: 'a'.repeat(40) };
+  validateCatalogPin(pin, pin.commit);
+  for (const edit of [{ commit: 'main' }, { repository: 'attacker/repo' }, { version: '9.9.9' }, { extra: true }]) {
+    assert.throws(() => validateCatalogPin({ ...pin, ...edit }));
+  }
+  assert.throws(() => validateCatalogPin(pin, 'b'.repeat(40)), /does not match/);
+});
 test('config accepts approved sizes and rejects unknown security inputs', () => {
   for (const size of ['small', 'medium']) assert.equal(validateConfig({ ...config, size }, 'storage-bicep').size, size);
   for (const extra of [{ publicNetworkAccess: 'Enabled' }, { image: 'attacker/image' }, { module: 'evil' }, { engine: 'terraform' }, { settings: {} }]) {
