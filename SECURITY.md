@@ -1,26 +1,24 @@
 # Security policy
 
-This repository is a demonstration, not a production reference architecture, support commitment, or FSI compliance certification. No Azure deployment or live security outcome is established by offline validation.
+The catalog separates public configuration validation from private Azure deployment. Its security controls and the adaptations needed for production are described in the [design review](docs/security-controls.md). The published release has passed CI but has not been deployed to Azure.
 
 ## Reporting
 
-Do not post credentials, customer data, exploitable details, state, plans, or private network information in public issues. Use the repository's **Security → Report a vulnerability** option if private reporting is enabled. If it is unavailable, ask `mocelj` for a private reporting channel without including the sensitive details. A private channel and response arrangements must be established before a connected rehearsal.
+Use **Security → Report a vulnerability** if private reporting is enabled. Otherwise, contact `mocelj` to arrange a private channel before sharing details. Public issues are not suitable for credentials, customer data, exploit details, state, plans, or private network information.
 
-Include the affected catalog commit, target, expected boundary, observed behavior, and a minimal synthetic reproduction. Never attach live secrets. Report defects here rather than implying that this project is a Microsoft-operated service.
+Include the catalog commit, target, expected and observed behavior, and a reproduction using test data. Report issues with these wrappers here; the repository is maintained independently of Microsoft.
 
-## Deployment boundary
+## Deployment controls
 
-- Public validation has no Azure credentials, OIDC token, private backend, or private runner.
-- Connected execution is disabled unless `ENABLE_AZURE_DEPLOYMENT=true` and the documented prerequisites are satisfied.
-- Only trusted, protected catalog code may run on the catalog-only private runner. Consumer JSON is data, not executable content.
-- Both plan and apply require an exact 40-hex consumer commit already merged into approved `main`; no premerge/fork Azure preview is supported. Reject arbitrary repositories, paths, mutable commits, consumer scripts, mismatched plan/input bindings, and unreviewed destructive operations.
-- Entra/OIDC authentication is required. Do not introduce Shared Key, SAS, publishing profiles, client secrets, or an ambient privileged runner identity as a workaround.
-- Saved plans and state can contain sensitive data. Plans belong in the private `plans` Blob container, never public artifacts. Apply selects the reviewed `plan_id`, requires matching configuration/catalog/environment hashes and explicit `demo-apply` approval; publish only deliberately sanitized summaries.
+- Public validation uses hosted runners without Azure credentials, OIDC tokens, or private backend access.
+- Deployment is disabled by default. Enabling `ENABLE_AZURE_DEPLOYMENT` requires the [environment prerequisites](docs/rehearsal.md).
+- The private runner is registered only to the catalog. It executes protected catalog code and reads consumer JSON as data, not scripts or application source.
+- Plan and apply accept a full 40-hex consumer commit already merged into `main`. Repository, path, target, ancestry, and input checks prevent arbitrary source execution and stale-plan reuse. Premerge and fork previews are not supported.
+- Entra/OIDC provides short-lived authentication. Shared Key, SAS, publishing profiles, client secrets, and persistent privileged runner identities are not part of the deployment path.
+- Saved plans and state stay private because they can contain sensitive values. Apply selects a `plan_id` from the private `plans` container, verifies configuration/catalog/environment hashes, and requires `demo-apply` approval. Public logs contain sanitized summaries only.
 
-Read the [control and exception matrix](docs/security-controls.md), [connected gates](docs/rehearsal.md), and [cleanup boundaries](docs/operations.md).
-
-A self-hosted runner in a public repository remains risky. The documented isolation is a disposable-demo exception. For real FSI use, move the trusted execution plane to a private organizational repository and restricted runner group, apply organizational controls, and require independent approval.
+The public-repository self-hosted runner is a deliberate demo exception. For production, particularly in a regulated environment, use a private organizational execution repository, restricted runners, and independent approval. The [control matrix](docs/security-controls.md) and [cleanup guide](docs/operations.md) cover the associated operating requirements.
 
 ## Versions
 
-There is no long-term support promise. A release is eligible for rehearsal only after its dependency graph, provenance, lock files, tests, and explicit live gates have been reviewed. An immutable pin limits drift; it does not prove that an image is hardened or a dependency has no vulnerabilities. See [dependency upgrades](docs/dependencies.md).
+The project has no long-term support commitment or compliance certification. Pinned versions provide reproducibility, while vulnerability review and live verification remain separate responsibilities. See [dependency upgrades](docs/dependencies.md) for the release process.

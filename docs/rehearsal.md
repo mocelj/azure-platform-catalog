@@ -1,13 +1,17 @@
-# Validation and connected rehearsal
+# Validation and deployment preparation
 
-There are two separate gates: **offline release checks** and an **explicitly authorized Azure-connected rehearsal**. The commands below are instructions; the recorded local evidence is summarized separately. No Azure deployment is part of repository implementation.
+Both repositories have public `v0.1.0` releases and passing CI. The release checks
+cover configuration, source, compilation, and supported Terraform mocks. No Azure
+deployment has been performed, so authorization, private connectivity, and workload
+health still need to be verified in the target environment.
 
-Run `node scripts/preflight.mjs --environment environments/demo.local.json --live`
-from an authorized private operator host for read-only checks, including current
-regional image metadata. The connected workflow checks foundation properties and
-private state DNS but uses the catalog's approved image metadata; it does not
-grant the workload identity subscription-wide discovery permissions. Image
-availability, quota and SKU compatibility remain operator prerequisites.
+The platform operator can run
+`node scripts/preflight.mjs --environment environments/demo.local.json --live`
+from a private host for read-only checks, including current regional image
+metadata. The deployment workflow checks foundation properties and private state
+DNS but uses catalog image metadata rather than subscription-wide discovery.
+Current image availability, quota, and SKU compatibility therefore remain
+operator checks.
 
 ## Offline release checks
 
@@ -32,13 +36,16 @@ npm run check
 Pop-Location
 ```
 
-Record command exits and evidence at the exact catalog/consumer commits. Confirm all eight targets, bootstrap, schemas, negative fixtures, renderer parity, pinned dependencies, provider locks, and workflow boundaries are covered by the actual test results. Do not call missing checks “passed.”
-
-Downloads/restores may contact public registries. Offline IaC validation must not connect to the private Terraform backend or deploy Azure resources. A mock provider test demonstrates assertions over mocked configuration; it is not an Azure plan.
+Record results against the catalog and consumer commits under review. These
+commands restore dependencies from public registries, but do not connect to
+private Terraform state or deploy resources. Mock tests evaluate configuration
+with provider responses replaced by test data.
 
 ### Run one Terraform mock suite
 
-The example variables are not loaded automatically. Storage, VM, and Web App have mock suites; Container Apps does not, for the reason below. After backend-disabled initialization with read-only provider locks, run a supported suite from its workload root using an **explicit `-var-file`**. From the catalog root on Windows:
+Storage, VM, and Web App have mock suites. Their example variables must be
+supplied explicitly because Terraform does not discover these files automatically.
+After backend-disabled initialization, run a suite from the catalog root:
 
 ```powershell
 $service = 'storage' # storage, vm, or web-app; Container Apps has no mock suite
@@ -49,66 +56,98 @@ $variables = (Resolve-Path ".\examples\platform\$service\terraform\.example.tfva
 if ($LASTEXITCODE -ne 0) { throw 'The selected Terraform mock suite failed.' }
 ```
 
-`-chdir` selects the workload root; the absolute variable-file path avoids resolving it against the wrong directory. Do not run bare `terraform test` and assume the synthetic example values are discovered. On Linux, use the verified local Terraform executable and native paths.
+`-chdir` selects the workload root, and the absolute variable path keeps resolution
+independent of that change. On Linux, use the local Terraform executable and
+native paths.
 
 ### Recorded local evidence and limits
 
-The integration handoff records these results; they are not publication, hosted-CI, or deployment approval:
+The release validation covers:
 
-| Check | Recorded local result |
+| Check | Coverage and result |
 | --- | --- |
-| Catalog Node tests | 34 passed |
+| Catalog Node tests | Passing configuration, source, security, preflight, and workflow checks |
 | Consumer contract | All eight requests validate/render; application names remain unchanged, target groups/state keys remain separate, forbidden public-access properties are rejected |
-| Pinned Bicep `0.47.16` | Verified compiler; all four workload roots and four parameter files, plus bootstrap `main`, `shared`, and demo parameters compiled with zero warnings |
+| Bicep `0.47.16` | Four workload roots and four parameter files, plus bootstrap `main`, `shared`, and demo parameters compile with zero warnings |
 | Terraform `1.13.5` | All four roots initialize without the backend and validate; accepted upstream VM provider deprecation warnings remain |
-| Terraform mock suites | Storage, VM, and Web App: three actual mocked plan runs each, nine passed in total. Container Apps: no mock suite or mocked plan coverage |
-| Publication and hosted CI | Pending; no release claim |
+| Terraform mock suites | Storage, VM, and Web App: three mocked plan runs each, nine passed in total. Container Apps has no mocked plan coverage |
+| Publication and hosted CI | Both `v0.1.0` releases are public; hosted validation passes |
 | Azure plan/apply and live health | Not run; connected execution remains disabled |
 
-The earlier local compiler-download and environment-schema blockers are resolved. The renderer passes the validated application name unchanged; wrappers own final Azure names. These fixes do not replace fresh-checkout CI evidence.
+Container Apps has source-contract checks and real Terraform initialization/validation
+only. Terraform `1.13.5` cannot mock an ephemeral resource schema in the upstream
+environment module, even at count zero. This leaves the environment, app, and
+private endpoint without mocked plan coverage. Source tests check private access,
+subnet and profile settings, monitoring, image/ingress, and endpoint bindings;
+they do not evaluate the expanded Azure resources. `npm run iac:check` reports
+the limitation in its output.
 
-**Container Apps mock limitation:** Terraform `1.13.5` rejects the upstream ephemeral resource's mock schema even when its `count` is zero. An attempted `override_module` did **not** bypass the failure, so the unsupported Container Apps `.tftest.hcl` file was removed. **Neither its environment, app, nor private endpoint has mocked plan coverage.** Evidence consists only of explicit Node source-contract invariants and real Terraform backend-disabled initialization/validation. Source checks inspect the private-access, subnet, workload-profile, monitoring, image/ingress, and private-endpoint bindings; they do not validate expanded Azure resources or live behavior. `npm run iac:check` explicitly prints this unavailable-test limitation instead of silently reporting the absent suite as passed.
+The VM module produces provider deprecation warnings. These are accepted for
+the current dependency set and retained for the next AVM/provider upgrade review.
 
-**VM warnings:** the pinned upstream VM AVM emits provider deprecation warnings. They are accepted compatibility warnings for this demo, not a claim of warning-free Terraform validation. Retain them in validation evidence and review them during dependency upgrades; do not patch upstream code or silently change provider pins to suppress them.
+For subsequent releases, rerun validation from fresh checkouts and check dependency
+records, links, public-data hygiene, and consumer pins. Repository rules,
+environment reviewers, Actions settings, and private reporting also need service-side
+configuration; committing their related files is not sufficient.
 
-Before release, verify documentation links, secret/public-content hygiene, immutable cross-repository pins, and real credential-free CI from fresh checkouts. An initial catalog publication may be explicitly marked **unfinished** to obtain hosted validation; it is not a release or evidence that those checks have passed. Require green hosted checks with the exact pinned compiler and providers before creating the release and final consumer pin.
+## Preparing the Azure environment
 
-Repository rules, environment reviewers, Actions settings, and private reporting are service-side settings; committing YAML/CODEOWNERS alone does not configure them.
+### Subscription and foundation
 
-## Connected prerequisites — all must be satisfied
+Confirm the subscription, tenant, `swedencentral` region, cost owner, and deployment
+scopes. Review provider registration, Azure Policy and deny assignments, role
+assignments, locks, and Marketplace terms. Check current image/SKU capacity,
+runtime and Private Link support, and acceptance of the Container Apps preview APIs.
 
-### Subscription and approved resources
-
-- A designated demo subscription, exact tenant, `swedencentral` region, cost owner, and authorized resource scopes.
-- Required providers registered through approved administration; regional availability, quotas, exact VM image/SKU availability, supported runtime, Private Link support, Container Apps workload-profile/subnet/NAT compatibility, and preview API acceptance checked.
-- Azure policy/deny assignments, role assignments, locks, and required Marketplace terms reviewed. Offline compilation cannot establish any of these.
-- A reviewed [foundation deployment or existing-foundation binding](foundation.md). Existing mode does not adopt or delete customer resources. Use real validated bindings kept out of Git; the zero-subscription example is not a deployment target.
-- Distinct resource groups per target; distinct private-endpoint, VM, Web App integration, and per-engine Container Apps infrastructure subnets. Confirm actual CIDR capacity and delegations.
+Use either the [catalog foundation or existing customer bindings](foundation.md).
+Keep real bindings out of Git. Each target needs its own resource group, and
+private endpoints, VM, Web App integration, and the two Container Apps environments
+need the specified separate subnets. Check CIDR capacity, delegations, and
+workload-profile/NAT compatibility.
 
 ### Private client and runner
 
-- An existing isolated runner registered **only** to the catalog repository, with no customer-sensitive reachability and no persistent powerful Azure credentials. This repository does not provision a runner.
-- Explicit route and DNS integration to the approved private endpoints. Validate Blob, Web App site/SCM, and Container Apps environment names from the runner and the private test client.
-- Approved egress for GitHub, Entra, Azure management, pinned dependency sources, image registry, and public telemetry. NAT is outbound connectivity, not destination filtering.
-- Protection against untrusted contributor jobs: no consumer runner registration; no privileged PR/fork code execution; approvals/restrictions for outside contributions; preferably fresh/disposable execution and workspace cleanup.
-- Acknowledgement that this **public-repository self-hosted runner is a demo exception**, not an FSI production recommendation.
+Provide an isolated runner registered only to the catalog, without customer-sensitive
+network reachability or persistent privileged credentials. Runner provisioning is
+outside this repository. Test routes and DNS for Blob, Web App site/SCM, and
+Container Apps from both the runner and a private client.
+
+The runner needs egress to GitHub, Entra, Azure management, dependency/image
+registries, and public Monitor endpoints. NAT provides connectivity rather than
+destination filtering. Restrict outside-contributor jobs, keep consumer and fork
+code off the private runner, and use disposable execution or workspace cleanup.
+For production, move execution to a private organizational repository and runner
+group; the public-repository runner is a demo exception.
 
 ### Identity, state, and approval
 
-- Bootstrap administration separated from routine deployment. Resource-group and role-assignment permissions reviewed explicitly; never grant routine deployment subscription Owner just to resolve a failure.
-- Catalog/environment-scoped Entra federation configured for the exact intended issuer, subject, and audience; protected branch/environment restrictions verified. No client-secret or ambient-identity fallback.
-- Private Blob state access uses OIDC **and** Entra data-plane authorization. Confirm scope and propagation of the Blob role separately from infrastructure permissions. No account-key/SAS retrieval.
-- The private `plans` Blob container and retention for saved plans, with source/configuration/environment/target bindings. No raw plan goes to a public artifact. State locking and workflow serialization remain enabled.
-- Both plan and apply require an exact consumer SHA already merged into approved `main`. Apply uses its reviewed saved plan/bound inputs, rejects mismatched configuration/catalog/environment hashes and unreviewed destructive changes, and pauses at the protected `demo-apply` environment.
-- One presenter's approval is an intentional demo mechanism, **not independent separation of duties**. A real deployment process requires another authorized reviewer and prevention of self-review.
+Separate bootstrap administration from routine workload permissions. Configure
+catalog/environment-scoped federation with the expected issuer, subject, and
+audience, then verify branch and environment restrictions. The deployment path
+uses neither client secrets nor an ambient privileged runner identity.
 
-Only after the prerequisites are reviewed should a maintainer enable `ENABLE_AZURE_DEPLOYMENT=true`. Keep it absent/false otherwise.
+State access needs OIDC and an Entra Blob data role in addition to infrastructure
+permissions. Verify role scope and propagation. Keep saved plans in the private
+`plans` container with their source/input bindings and retention policy, and
+retain state locking and workflow serialization.
+
+Apply pauses in `demo-apply`, checks the saved result against current hashes, and
+rejects unreviewed destructive changes. A single presenter's approval demonstrates
+the mechanism but not separation of duties; production requires an independent
+reviewer and prevention of self-review.
+
+Set `ENABLE_AZURE_DEPLOYMENT=true` only when this environment preparation is
+complete. It remains disabled for the published example.
 
 ## Maintainer handoff
 
-Use [`.github/workflows/catalog-dispatch.yml`](../.github/workflows/catalog-dispatch.yml) **in the catalog repository**, from its protected `main`. Its inputs are `operation` (`plan` or `apply`), `target` (one of eight service-engine choices), `consumer_sha` (exact 40-hex commit), and `plan_id` (required for apply).
+Use [`.github/workflows/catalog-dispatch.yml`](../.github/workflows/catalog-dispatch.yml)
+on the catalog's protected `main`. Its inputs are `operation` (`plan` or `apply`),
+`target`, `consumer_sha` (the full 40-hex commit), and `plan_id` for apply.
 
-**Both operations require a consumer commit already merged into approved `main`. There is no premerge Azure preview in this release.** PR validation remains offline, with no private runner or Azure credentials. Do not substitute a consumer branch name, fork, arbitrary repository/path, or catalog ref.
+Both operations require a consumer commit already merged into `main`. PR
+validation has no Azure access, and this release has no premerge Azure preview.
+The workflow accepts only the configured repository and target paths.
 
 With authenticated GitHub CLI, after all connected prerequisites are met:
 
@@ -118,20 +157,30 @@ $consumerSha = '<merged-consumer-commit-40-hex>'
 gh workflow run catalog-dispatch.yml -R mocelj/azure-platform-catalog -f operation=plan -f "target=$target" -f "consumer_sha=$consumerSha"
 ```
 
-The plan operation uses `demo-plan`. Its private result is stored in the `plans` Blob container; the sanitized completion summary prints `plan_id`. Review the private plan/what-if and limitations, then dispatch apply using the same target, consumer SHA, and printed ID:
+Plan uses `demo-plan` and stores its result in the private `plans` container.
+The sanitized summary prints `plan_id`. After reviewing the plan or what-if,
+dispatch apply with the same target and consumer SHA:
 
 ```powershell
 $planId = '<plan_id-printed-by-successful-plan>'
 gh workflow run catalog-dispatch.yml -R mocelj/azure-platform-catalog -f operation=apply -f "target=$target" -f "consumer_sha=$consumerSha" -f "plan_id=$planId"
 ```
 
-Apply requires explicit approval in the protected **`demo-apply`** environment and matching configuration, catalog, and environment hashes. A changed binding invalidates the saved result: create and review a new plan rather than attempting to reuse it. The ID is not a substitute for approval or a public artifact location.
+Apply requires `demo-apply` approval and matching configuration, catalog, and
+environment hashes. If any binding changes, generate and review a new plan.
 
-The consumer's `.github/workflows/validate.yml` and catalog's `reusable-validate.yml` are public-only validation paths. Reusing a workflow does not lend the catalog's repository runner to the consumer. Do not add a PAT/GitHub App credential for automatic dispatch.
+The consumer's `validate.yml` and catalog's `reusable-validate.yml` run public
+validation only. Reusable workflows do not give the consumer access to the
+catalog's runner. Maintainer dispatch avoids needing a cross-repository PAT or App
+credential.
 
-Connected operations must read consumer JSON as data, not check out and execute consumer code, workflows, install hooks, or payload. Application release uses a [separately reviewed artifact](https://github.com/mocelj/azure-platform-app-demo/blob/main/docs/web-app-payload.md).
+The private runner reads consumer JSON, not executable consumer source or install
+hooks. Application deployment uses a [separately reviewed artifact](https://github.com/mocelj/azure-platform-app-demo/blob/main/docs/web-app-payload.md).
 
-## Rehearsal evidence — initially unverified
+## Checks for the first Azure deployment
+
+These checks remain outstanding. Record the results privately during deployment
+and publish a sanitized summary where useful.
 
 | Gate | Evidence to record privately |
 | --- | --- |
@@ -149,10 +198,15 @@ Connected operations must read consumer JSON as data, not check out and execute 
 | Repeat/change | Idempotency review and controlled size change without unintended replacement/deletion |
 | Cleanup | Approved target/resource inventory, preserved state/evidence, workload-first teardown, no customer-owned deletion |
 
-Use the [eight platform guides](../README.md#eight-examples-one-developer-contract) for the actual workload entrypoints and commands. Authentication does not itself prove sufficient authorization. Bicep what-if normally requires deployment-equivalent permissions; do not advertise it as read-only or assume `ProviderNoRbac` removes all permission requirements.
-
-Stop when any prerequisite fails. Do not change public access, use key authentication, skip locking, choose a floating image, or introduce non-AVM infrastructure to force a successful demonstration.
+The [eight platform guides](../README.md#eight-examples-one-developer-contract)
+provide the workload commands. Bicep what-if normally needs deployment-equivalent
+permissions; `ProviderNoRbac` is not a general permission bypass. Resolve
+authorization or connectivity failures within the design rather than enabling
+public access, key authentication, or disabled locking.
 
 ## Reporting results
 
-State separately: local checks run, public CI verified, Azure preflight performed, preview performed, deployment performed, health tested, and cleanup performed. Use **not run**, **blocked**, or **unverified** where appropriate. Sanitize public summaries; keep tokens, real bindings, state, plans, resource-sensitive output, and raw logs out of public artifacts.
+Separate CI results from Azure preflight, preview, deployment, health, and cleanup
+results. This makes it clear what has been exercised and what is still outstanding.
+Keep tokens, real bindings, state, plans, and sensitive raw logs out of public
+artifacts.

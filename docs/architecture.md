@@ -1,6 +1,6 @@
 # Architecture
 
-The platform product is a small, reviewed contract over a composition of AVM modules. There is no portal, dynamic module URL, arbitrary parameter bag, or automatic credentialed cross-repository dispatch.
+The design separates the application team's request from the platform team's infrastructure implementation. The application repository holds configuration; the catalog owns AVM compositions, environment bindings, and deployment workflows. A PR is the interface between the two, so no portal or cross-repository dispatch credential is needed.
 
 ```mermaid
 flowchart LR
@@ -24,7 +24,7 @@ flowchart LR
     AVM --> Targets[Eight independent workload targets]
 ```
 
-Both connected operations accept only an exact 40-hex consumer SHA already merged into approved `main`. There is **no premerge Azure preview**: PR checks are offline. Plan and apply have separate dispatches/evidence requirements; apply consumes the reviewed private result and verifies its bindings. The checked-in catalog workflow defines the exact gates. Merging a PR does not automatically deploy anything.
+PR checks run without Azure access. After merge, a maintainer dispatches plan with the consumer's full 40-character SHA, reviews the result, and dispatches apply separately. Apply verifies that the source and environment still match the plan. Both operations require a commit on `main`; merging a PR alone does not start deployment.
 
 ## Azure ownership
 
@@ -53,25 +53,27 @@ flowchart TB
     Client[Existing private client and runner] --> Network
 ```
 
-This is an ownership/data-flow diagram, not evidence of provisioned resources. NAT is **not** a firewall, packet-inspection service, or destination allowlist.
+The Bicep foundation owns shared networking, DNS, NAT, state storage, identities, and resource groups. Each workload consumes those resource IDs. This makes the foundation available before Terraform backend initialization and prevents the two engines from managing the same shared resources.
 
-The foundation creates shared networking, DNS, NAT, private state, identities, and resource groups through Bicep AVM. Terraform begins only after that foundation exists. Terraform workload roots consume bindings; they must not import or manage the Bicep-owned foundation.
+An existing customer foundation can supply the same [environment bindings](foundation.md). In that mode, the catalog references the resources without importing, redeploying, or deleting them. Any required network or access changes remain with the customer's administrators.
 
-In **existing-foundation mode**, the platform supplies validated JSON referencing customer-approved resources. Binding an ID is not adoption. The workloads must not create, mutate, or delete the customer's foundation. See [the foundation contract](foundation.md).
+NAT provides outbound connectivity, not traffic inspection or destination filtering. Azure Monitor also uses public endpoints in this design; the production alternatives are covered in the [security review](security-controls.md).
 
 ## Private access is service-specific
 
-- **Storage:** Blob private endpoint and `privatelink.blob.core.windows.net`; Entra data-plane authorization remains necessary.
-- **VM:** private NIC and approved management route/NSG source, not Private Link. The demo neither creates a public IP for the VM nor provisions a runner/Bastion.
-- **Web App:** inbound Private Link and separate outbound VNet integration. Both the site and SCM hostname must resolve privately.
-- **Container App:** environment-level Private Link plus app-level ingress. `external` app ingress can permit callers outside the environment **over the private endpoint**; it does not by itself make a private environment public. Internal-load-balancer-only networking is not a substitute for this architecture.
+| Service | Access model |
+| --- | --- |
+| Storage | Blob Private Link with `privatelink.blob.core.windows.net`. Clients also need an Entra data-plane role. |
+| VM | A private NIC and management-source NSG rule. This uses routed SSH, not Private Link; the catalog does not provision a jump host or Bastion. |
+| Web App | Inbound Private Link and outbound VNet integration use different subnets. Both the site and SCM names resolve through private DNS. |
+| Container App | Private Link terminates at the environment. App-level `external` ingress lets callers outside that environment reach it through the private endpoint, while public network access remains disabled. This differs from an internal-load-balancer-only environment. |
 
-An ordinary hosted GitHub runner has no assumed route to these private endpoints.
+The deployment runner and test client therefore need their own private routes and DNS integration. A standard GitHub-hosted runner does not have that connectivity.
 
-## Three things that never cross the trust boundary
+## Execution and data separation
 
-1. Consumer scripts, workflows, IaC, install hooks, and payload source do not execute on the infrastructure runner.
-2. State, saved plans, real environment bindings, tokens, and sensitive Azure output do not enter public artifacts/logs.
-3. A reusable workflow cannot borrow the catalog repository's private runner for a consumer job.
+The infrastructure runner reads consumer configuration as JSON. It does not execute consumer scripts, workflows, IaC, install hooks, or application code. Reusable workflows retain the caller's runner context, so the consumer cannot use the catalog's repository-level runner indirectly.
 
-The application release is a separate lane: reviewed payload source → isolated credential-free build/test → reviewed artifact digest → narrowly authorized private deployment. Read the [Web App release guide](https://github.com/mocelj/azure-platform-app-demo/blob/main/docs/web-app-payload.md).
+State, plans, environment bindings, and sensitive Azure output stay in private storage. Public job summaries contain only the information needed to identify and review a run.
+
+Application code is built and tested separately, without infrastructure credentials. A reviewed artifact is then deployed over the private network with narrowly scoped release permissions. The [Web App release guide](https://github.com/mocelj/azure-platform-app-demo/blob/main/docs/web-app-payload.md) describes that process.

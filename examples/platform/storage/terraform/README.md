@@ -1,12 +1,13 @@
-# Run the private Storage Terraform example
+# Blob Storage with Terraform
 
-See [controls, dependencies and cleanup](../../../../platform-apps/storage/terraform/README.md).
-`.example.tfvars.json` contains **synthetic** IDs, not a deployable environment.
-Replace them only with approved foundation outputs, retaining this exact input
-contract. Use a distinct Terraform resource group and state key; never point
-Bicep and Terraform at the same account.
+This example runs the catalog's [storage root](../../../../platform-apps/storage/terraform/README.md).
+Use `.example.tfvars.json` for local checks. For deployment, supply foundation
+resource IDs and a separate Terraform workload group and state key, so this
+target does not share ownership with the Bicep account.
 
-From the catalog root, offline validation:
+## Local validation
+
+From the catalog root:
 
 ```powershell
 $Tf = (Resolve-Path .\.tools\terraform.exe).Path # verified Terraform 1.13.5
@@ -17,17 +18,17 @@ $Root = (Resolve-Path .\platform-apps\storage\terraform).Path
 & $Tf "-chdir=$Root" test "-var-file=../../../examples/platform/storage/terraform/.example.tfvars.json"
 ```
 
-`init` downloads pinned public dependencies, but `validate` and mocked tests
-perform no Azure provisioning. This is not a live deployment claim.
+Initialization restores dependencies without connecting to state. Validation and
+mocked plan tests use the example inputs and do not provision Azure resources.
 
-## Future approved connected initialization
+## Connect to the private backend
 
-Run only on the isolated private runner after the foundation exists. It needs
-private Blob DNS/routing, `Storage Blob Data Contributor` scoped to its state
-container and appropriate workload resource-management permissions. Public
-GitHub runners cannot reach the private backend. The approved workflow provides
-the real `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID` and GitHub's OIDC
-request environment (`id-token: write`); do not paste tokens into commands/files.
+Once the foundation is available, initialize state from the private runner.
+It needs Blob DNS/routing and `Storage Blob Data Contributor` on the state
+container, in addition to workload management permissions. The catalog workflow
+provides `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`, and GitHub's OIDC
+environment through `id-token: write`. Tokens are supplied by the job rather
+than copied into files or commands.
 
 ```powershell
 $env:ARM_USE_OIDC = "true"
@@ -44,10 +45,13 @@ $State = Get-Content .\environments\demo.local.json -Raw | ConvertFrom-Json
   "-backend-config=subscription_id=$env:ARM_SUBSCRIPTION_ID"
 ```
 
-`demo.local.json` is platform-owned local metadata, not consumer configuration.
-Supply a separately rendered trusted variable file to the approved plan/apply
-workflow. Do not use keys, SAS or public-access fallback; keep state locking
-enabled and saved plans private. `terraform destroy` is **not** part of offline
-validation: after use, separately review a target-only destroy plan and storage
-data-retention consequences. Preserve foundation and state until cleanup is
-verified.
+`demo.local.json` contains the platform's environment bindings and stays out of
+source control. The [plan/apply workflow](../../../../docs/rehearsal.md#maintainer-handoff)
+uses variables rendered from those bindings and the merged consumer request.
+The backend remains private and Entra-only, with locking enabled.
+
+## Cleanup
+
+Review a destroy plan for this target's state and decide how to retain or dispose
+of Blob data and versions. Keep saved plans private and preserve the foundation
+and backend until workload cleanup is complete.

@@ -1,10 +1,16 @@
-# Run the private Container App Terraform example
+# Private Container App with Terraform
 
-See [the Container App contract and preview disclosure](../../../../platform-apps/container-app/terraform/README.md).
-The `.example.tfvars.json` is synthetic. Use the Terraform environment's dedicated
-infrastructure subnet, not the Bicep environment subnet. The endpoint subnet
-and region-specific `privatelink.swedencentral.azurecontainerapps.io` zone are
-foundation-owned. No workspace shared secret or arbitrary image input is needed.
+The [Container App root](../../../../platform-apps/container-app/terraform/README.md)
+composes an environment, app, and private endpoint. Replace the placeholders in
+`.example.tfvars.json` with foundation IDs for deployment. The Terraform
+environment needs its own infrastructure subnet, separate from the Bicep
+environment and the shared endpoint subnet. DNS uses
+`privatelink.swedencentral.azurecontainerapps.io`.
+
+The catalog supplies the image and monitoring configuration; the interface does
+not accept arbitrary images or workspace shared keys.
+
+## Local validation
 
 From the catalog root:
 
@@ -17,23 +23,23 @@ $Root = (Resolve-Path .\platform-apps\container-app\terraform).Path
 node --test tests/terraform-workloads.test.mjs
 ```
 
-No live provisioning is performed. App/environment APIs
-`2025-02-02-preview` / `2025-10-02-preview` are explicit demo exceptions. The
-image is an illustrative Microsoft sample, not an FSI production baseline.
-External app ingress means access from outside the environment through its PE;
-environment public-network access remains disabled and HTTPS is mandatory.
+This root has source-contract tests and real `init`/`validate`, but no mocked plan
+coverage. Terraform `1.13.5` cannot mock the upstream environment's ephemeral
+resource schema, even with count zero. The limitation applies to the environment,
+app, and private endpoint; it is reported by the IaC check command.
 
-Terraform 1.13.5 cannot mock the selected environment module's ephemeral resource
-schema, even though key retrieval has count zero for this configuration. This
-root has source-contract tests and real `init`/`validate`, not mocked plan
-coverage. No upstream module is patched to hide that limitation.
+Before deployment, review the app/environment APIs
+`2025-02-02-preview` and `2025-10-02-preview` and the older Microsoft sample
+image. These are demonstration choices, not production defaults. External app
+ingress reaches the app through the environment's private endpoint; public
+network access is disabled and HTTPS is required.
 
-## Future approved Entra/OIDC backend setup
+## Connect to the private backend
 
-Run only on the isolated private runner after validating delegation, NAT, DNS,
-region/API support and private Blob connectivity. Grant state-container-scoped
-`Storage Blob Data Contributor` separately from workload resource permissions.
-The trusted workflow supplies `ARM_CLIENT_ID`, `ARM_TENANT_ID`,
+Use the private runner after checking delegation, NAT, DNS, regional/API support,
+and Blob connectivity. It needs `Storage Blob Data Contributor` on the state
+container as well as workload management permissions.
+The catalog workflow supplies `ARM_CLIENT_ID`, `ARM_TENANT_ID`,
 `ARM_SUBSCRIPTION_ID` and GitHub OIDC request variables with `id-token: write`.
 
 ```powershell
@@ -51,9 +57,13 @@ $State = Get-Content .\environments\demo.local.json -Raw | ConvertFrom-Json
   "-backend-config=subscription_id=$env:ARM_SUBSCRIPTION_ID"
 ```
 
-The environment binding remains local and platform-owned. Connected plan/apply
-requires separate approval and trusted rendered variables. Never open public
-access or use state keys/SAS as a workaround. Keep state locks and saved plans
-private. After use, review a target-only destroy plan: the environment and PE
-can cost money even when replicas scale to zero. Preserve shared infrastructure,
-private state and the Bicep environment until separately authorized cleanup.
+The environment binding remains local. Use the
+[catalog plan/apply workflow](../../../../docs/rehearsal.md#maintainer-handoff)
+with rendered variables, Entra state authorization, and locking. Saved plans and
+state remain private.
+
+## Cleanup
+
+Review a destroy plan for this target. The environment and private endpoint can
+incur charges even when application replicas scale to zero. Retain the shared
+foundation, backend, and Bicep environment until their owners schedule cleanup.

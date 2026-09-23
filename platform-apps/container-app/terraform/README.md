@@ -1,62 +1,64 @@
-# Private Container App — Terraform root
+# Private Container App Terraform root
 
-Official AVM Container App **0.9.0**, managed environment **0.5.0** and separate
-private endpoint **0.2.0**. See
-[the runnable example](../../../examples/platform/container-app/terraform/README.md).
+The root composes official AVM Container App `0.9.0`, managed environment `0.5.0`,
+and private endpoint `0.2.0`. The [example](../../../examples/platform/container-app/terraform/README.md)
+shows validation and state configuration.
 
-## Enforced baseline
+## Configuration
 
-- Dedicated VNet-injected **workload-profiles** environment, Consumption profile,
-  infrastructure subnet separate from endpoints and from the Bicep environment.
-- Environment `publicNetworkAccess = Disabled`. External-load-balancer mode
-  (`internal = false`) deliberately supports Private Link: there is **no public
-  workload ingress**. Separate PE group **managedEnvironments**, using
-  `privatelink.swedencentral.azurecontainerapps.io`.
-- App `external_enabled = true` accepts clients outside the environment **via
-  that PE**, not through a public endpoint. Insecure ingress is disabled; HTTPS
-  frontend uses Container Apps' platform TLS baseline (1.2 or later). The pinned
-  AVM ingress contract does not expose a minimum-TLS-version override.
-- `small`: 0.25 vCPU/0.5Gi, 0–2 replicas; `medium`: 0.5 vCPU/1Gi, 0–3 replicas.
-- Exact Microsoft hello-world digest/port from `catalog/platform.json`, hardcoded
-  and parity-tested; no arbitrary image input. Port 80 is HTTP inside the
-  platform TLS termination boundary, not public insecure frontend ingress.
-- App/environment system identities. Azure Monitor log destination
-  **azure-monitor**, with environment console/system logs and metrics routed to
-  the provided workspace through diagnostics. No workspace shared key is read.
-  Public Azure Monitor is a disclosed demo exception.
-- Platform tags override conflicting metadata; telemetry off in all AVMs.
+A dedicated VNet-injected workload-profiles environment uses a Consumption
+profile. Its infrastructure subnet is separate from both private endpoints and
+the Bicep environment. Environment `publicNetworkAccess` is disabled, while
+`internal = false` supports the Private Link design. The endpoint connects to
+`managedEnvironments` using `privatelink.swedencentral.azurecontainerapps.io`.
+
+App `external_enabled = true` allows clients outside the environment to reach it
+through that private endpoint. Insecure ingress is disabled. Frontend TLS uses
+the Container Apps platform baseline of 1.2 or later; this AVM version does not
+offer a minimum-TLS override. The container listens on HTTP port 80 behind
+platform TLS termination.
+
+`small` provides 0.25 vCPU/0.5Gi with 0-2 replicas; `medium` provides
+0.5 vCPU/1Gi with 0-3 replicas. The image digest and port match
+`catalog/platform.json` and are not developer inputs.
+
+The app and environment use system identities. Environment console/system logs
+and metrics go to the workspace through the `azure-monitor` destination and
+diagnostic settings, without reading a workspace shared key. Azure Monitor uses
+public endpoints. Catalog tags take precedence over supplied metadata, and AVM
+telemetry is disabled.
 
 Common inputs: `name`, `location` (only `swedencentral`), `size`,
 `resource_group_name`, `log_analytics_workspace_resource_id`, `tags`.
 Service: `private_endpoint_subnet_resource_id`, `private_dns_zone_resource_id`,
 `infrastructure_subnet_resource_id`. The foundation owns delegated subnets,
-NSGs, NAT, DNS and workspace. NAT is not destination-filtering security.
+NSGs, NAT, DNS, and workspace. NAT supplies outbound connectivity without
+destination filtering.
 
-## Preview and supply-chain disclosure
+## API and image considerations
 
-App API **2025-02-02-preview**; environment API **2025-10-02-preview**.
-Utility diagnostics also use the Azure Monitor preview API recorded in the
-[full dependency/API inventory](../../../catalog/terraform-dependencies.json).
-These upstream previews are explicit accepted demo exceptions, not GA claims.
-The public Microsoft sample image is illustrative, not FSI-hardened or a
-production workload. Digest pinning is not a vulnerability assessment.
-Terraform **1.13.5** and exact providers have a committed lock file; exact
-transitive module pins/provenance are separate.
+The app API is `2025-02-02-preview`; the environment API is
+`2025-10-02-preview`. Diagnostic utilities also use a preview API listed in the
+[dependency inventory](../../../catalog/terraform-dependencies.json). Review
+these previews against production support requirements.
+
+The MCR hello-world image is an older Microsoft sample for demonstrating the
+platform, not a hardened application. Digest pinning makes it repeatable but
+does not replace image assessment. Terraform `1.13.5` and providers use a
+committed lock, with module versions and provenance tracked separately.
 
 ## Verification and cleanup
 
-This root has source-contract checks and real backend-free init/validate.
-Terraform 1.13.5 cannot mock the upstream environment's ephemeral resource schema
-(even at count zero), so no mocked app, private-endpoint or environment plan
-coverage is claimed. Upstream source remains unchanged.
+Source checks and real backend-disabled initialization/validation pass.
+Terraform `1.13.5` cannot mock an upstream ephemeral resource schema, even at
+count zero, so this root has no environment, app, or endpoint mocked plans.
+The upstream modules remain unchanged.
 
-Offline checks do not verify actual Azure allocation, Private
-Link/DNS, image execution, NAT routes or application readiness. No live
-deployment is claimed. Before approved deployment, verify subnet capacity,
-delegation, regional support, API availability and runner private connectivity.
+Before the first Azure deployment, check subnet capacity/delegation, regional
+and API availability, and runner connectivity. Deployment tests still need to
+cover Private Link/DNS, image startup, NAT routing, and application health.
 
-After use, review a destroy plan for this Terraform target only. The environment
-and Private Link incur charges independently of scale-to-zero application
-replicas. Preserve shared foundation, the other engine's environment and state.
-Do not publish saved plans/state/tokens. Keep private plan artifacts only for
-the approved retention period.
+Cleanup uses a destroy plan for this target's state. The environment and Private
+Link have costs independent of application scale-to-zero. Preserve shared
+resources and the Bicep environment, and retain private plans/state under the
+deployment retention policy.

@@ -1,10 +1,12 @@
-# Run the private VM Terraform example
+# Private VM with Terraform
 
-See [the VM contract and cleanup](../../../../platform-apps/vm/terraform/README.md).
-The supplied `.example.tfvars.json` has synthetic IDs and a non-deployable
-public-key fixture. Replace it with approved foundation bindings and the
-platform operator's real **public** SSH key. No private key belongs in tfvars.
-Small/medium select only D2as_v5/D4as_v5 with the catalog-pinned Ubuntu image.
+This example runs the [VM root](../../../../platform-apps/vm/terraform/README.md)
+with D2as_v5 or D4as_v5 sizing and the catalog's Ubuntu image.
+`.example.tfvars.json` supplies test resource IDs and a public-key fixture.
+For deployment, replace them with foundation bindings and the operator's public
+SSH key; retain the private key outside Terraform inputs.
+
+## Local validation
 
 From the catalog root:
 
@@ -17,17 +19,20 @@ $Root = (Resolve-Path .\platform-apps\vm\terraform).Path
 & $Tf "-chdir=$Root" test "-var-file=../../../examples/platform/vm/terraform/.example.tfvars.json"
 ```
 
-No real Azure resources are created by validation/mocked tests. Before future
-approved deployment verify zone-1 quota, image/SKU compatibility, host encryption
-registration/support, private SSH management NSG rules and NAT routing.
+These checks do not provision Azure resources. The upstream VM module emits
+provider deprecation warnings with the pinned provider set; validation succeeds
+and the warnings remain visible for upgrade review.
 
-## Future approved Entra/OIDC backend setup
+Before deployment, check zone-1 quota, image/SKU compatibility, encryption-at-host
+support and registration, management NSG rules, and NAT routing.
 
-Only use the isolated private runner. Foundation-owned private Blob networking
-and DNS must already work. Assign state-container-scoped `Storage Blob Data
-Contributor` separately from workload resource-management permissions. The
-approved GitHub workflow supplies `ARM_CLIENT_ID`, `ARM_TENANT_ID`,
-`ARM_SUBSCRIPTION_ID` and OIDC request variables with `id-token: write`.
+## Connect to the private backend
+
+Use the private runner after foundation DNS and routing are available. It needs
+`Storage Blob Data Contributor` on the state container as well as workload
+management permissions. The catalog workflow supplies `ARM_CLIENT_ID`,
+`ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`, and OIDC request variables through
+`id-token: write`.
 
 ```powershell
 $env:ARM_USE_OIDC = "true"
@@ -44,9 +49,12 @@ $State = Get-Content .\environments\demo.local.json -Raw | ConvertFrom-Json
   "-backend-config=subscription_id=$env:ARM_SUBSCRIPTION_ID"
 ```
 
-The local environment binding is platform-owned and excluded from source.
-Plan/apply is a separately approved connected workflow using trusted rendered
-variables, never untrusted source on the privileged runner. No key/SAS fallback,
-no public VM/state endpoints, no saved plans in public artifacts. Keep locking.
-For cleanup, review destruction against this exact state and remove only its
-VM, NIC and disk; preserve shared foundation and the Bicep target.
+The environment binding stays local. The
+[catalog workflow](../../../../docs/rehearsal.md#maintainer-handoff) renders
+deployment inputs from the merged request, without executing consumer code.
+State access remains private and Entra-only, with locks and saved plans retained.
+
+## Cleanup
+
+Review a destroy plan against this target's state, including its VM, NIC, and
+disk. Preserve the shared foundation and the separately managed Bicep instance.

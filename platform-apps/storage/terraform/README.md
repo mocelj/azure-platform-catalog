@@ -1,49 +1,51 @@
-# Private Blob Storage — Terraform root
+# Blob Storage Terraform root
 
-Run this fixed root, not a downloaded wrapper module. It composes official
-`Azure/avm-res-storage-storageaccount/azurerm` **0.10.0** and its exact utility closure.
-See [the runnable example](../../../examples/platform/storage/terraform/README.md).
+This root composes `Azure/avm-res-storage-storageaccount/azurerm` `0.10.0`
+and its pinned dependencies. Run it from the catalog checkout using the
+[example](../../../examples/platform/storage/terraform/README.md).
 
-## Enforced baseline
+## Configuration
 
-- `small`: Standard LRS; `medium`: Standard ZRS. StorageV2, Hot, Microsoft-managed
-  encryption plus infrastructure encryption. Globally unique name derived from
-  the instance, subscription and resource group.
-- Public network access, Shared Key, anonymous Blob access, local users and
-  cross-tenant replication disabled. HTTPS required; minimum TLS 1.2.
-- Only Blob private ingress, using the supplied PE subnet and the existing
-  `privatelink.blob.core.windows.net` zone. Public service bypass disabled.
-- Private `data` container, versioning and seven-day Blob/container soft deletion.
-- System identity; account metrics and Blob logs/metrics go to the supplied
-  workspace. Module telemetry disabled. Azure Monitor connectivity is public,
-  a disclosed demo exception, not private monitoring.
-- `platform`, `environment`, `workload`, `engine`, and `catalogVersion` tags
-  override conflicting platform metadata. No raw AVM/security passthrough.
+The account is StorageV2 with the Hot tier. `small` selects Standard LRS;
+`medium` selects Standard ZRS. Its globally unique name is derived from the
+instance, subscription, and resource group. Encryption uses Microsoft-managed
+keys plus infrastructure encryption.
+
+Blob access uses the supplied private-endpoint subnet and
+`privatelink.blob.core.windows.net` zone. Public access, service bypass,
+Shared Key, anonymous access, local users, and cross-tenant replication are
+disabled. HTTPS and TLS 1.2 or later are required.
+
+The private `data` container has versioning and seven-day Blob/container soft
+delete. System identity is enabled, with account metrics and Blob diagnostics
+sent to the workspace over public Azure Monitor endpoints. AVM telemetry is
+disabled.
+
+Catalog values take precedence for `platform`, `environment`, `workload`,
+`engine`, and `catalogVersion` tags. The wrapper does not expose a raw AVM
+parameter object, which keeps the same controls in place for direct use.
 
 ## Contract
 
 Common inputs: `name`, `location` (only `swedencentral`), `size`,
 `resource_group_name`, `log_analytics_workspace_resource_id`, `tags`.
 Service inputs: `private_endpoint_subnet_resource_id`, `private_dns_zone_resource_id`.
-The resource group, networking, DNS, workspace, identity/RBAC, and state already
-exist and remain foundation-owned. Workload and state Blob data roles are
-separate from resource management roles. Use Entra authentication from a private
-client; the system identity alone does not grant a human Blob access.
+The resource group, networking, DNS, workspace, deployment identity/RBAC, and
+state are supplied by the foundation. Blob data roles are separate from
+resource-management permissions: a private client needs an Entra data role,
+and the account's system identity does not grant users access.
 
-Terraform **1.13.5** and providers are exact. The provider lock is not a module
-lock: [dependency provenance](../../../catalog/terraform-dependencies.json)
-records the module closure and explicit API versions.
+Terraform `1.13.5` and the provider lock define the tooling baseline.
+[Dependency records](../../../catalog/terraform-dependencies.json) cover modules
+and API versions, which Terraform's provider lock does not track.
 
 ## Verification and cleanup
 
-`terraform init -backend=false`, `terraform validate`, and mocked-provider tests
-do not prove Azure deployability, SKU availability, DNS, RBAC or connectivity.
-No live deployment is claimed. Connected plan/apply is a separately approved
-operation on an isolated runner with private state and service DNS reachability.
-Never expose state, saved plans or account keys in public artifacts.
+Initialization, validation, and three mocked plan runs pass without Azure access.
+Live checks still need to cover private DNS, endpoint access, and Entra
+authorization. Connected plan/apply uses the catalog runner and private backend.
 
-After a demo, review a destroy plan for **this target's state only**. Blob
-versions/soft-deleted data have retention and billing implications; make an
-explicit data-disposition decision before deleting storage. Never delete shared
-foundation/state to clean up a workload. Delete retained private plan artifacts
-according to policy only after recording the result.
+For removal, review a destroy plan against this target's state and decide how to
+handle versions and soft-deleted data. Preserve shared infrastructure until all
+dependents are removed. Plans, state, and retained deployment records remain
+private and follow the retention policy.

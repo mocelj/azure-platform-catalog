@@ -1,39 +1,38 @@
-# Storage — platform-team Bicep example
+# Blob Storage with Bicep
 
-This is an offline example, **not a live-deployment record**. Developers select
-the catalog application, name, and size; only the platform team supplies network,
-monitoring, resource-group and tag bindings. All resources are created inside
-`avm/res/storage/storage-account:0.33.1`, including its integrated blob private
-endpoint. Dependency source links and upstream API versions are recorded in
-`catalog\bicep-dependencies.json`.
+This example calls the local storage wrapper, which uses
+`avm/res/storage/storage-account:0.33.1` for the account and integrated Blob
+private endpoint. The platform team supplies the resource group, network, DNS,
+workspace, and tags; the developer selects the application name and size.
+Dependency and API records are in `catalog\bicep-dependencies.json`.
 
-Validation on 2026-09-23: Bicep 0.47.16 restored and compiled this wrapper and its
-parameter example without warnings or errors. All 13 workload contract tests
-passed. This does not establish Azure deployment or runtime success.
+## Configuration and prerequisites
 
-## Fixed contract and prerequisites
+The deployment is scoped to Sweden Central. `small` selects `Standard_LRS` and
+`medium` selects `Standard_ZRS`; for Storage, size represents redundancy rather
+than a capacity limit.
 
-- Sweden Central only. `small` uses `Standard_LRS`; `medium` uses `Standard_ZRS`.
-  This is a redundancy choice, not a storage-capacity limit.
-- Existing isolated workload resource group, private-endpoint subnet, VNet-linked
-  `privatelink.blob.core.windows.net` private DNS zone, and Log Analytics workspace.
-- Public network access, Shared Key, anonymous blobs, SFTP and local users are
-  disabled. TLS 1.2+, HTTPS only, infrastructure encryption, system identity,
-  seven-day blob/container soft deletion and blob versioning are enforced.
-- Account metrics and blob logs/metrics are sent to the supplied workspace.
-  Azure Monitor connectivity is the documented demo public-egress exception.
-- A trusted private runner/client must resolve the blob FQDN to the endpoint's
-  private IP. Data-plane callers need explicitly assigned Entra data roles;
-  the wrapper deliberately does not grant broad data access or export keys.
-- Storage names are deterministically derived and globally unique. Mandatory
-  `platform`, `environment`, `workload` and `engine` tags override supplied values.
+Provide a dedicated workload resource group, private-endpoint subnet,
+VNet-linked `privatelink.blob.core.windows.net` zone, and Log Analytics workspace.
+The client and runner must resolve the Blob hostname to its private IP. Entra
+data roles are assigned separately from resource-management permissions; the
+wrapper does not grant broad data access or return keys.
+
+The account requires HTTPS/TLS 1.2 or later, with public network access, Shared
+Key, anonymous blobs, SFTP, and local users disabled. It enables infrastructure
+encryption, system identity, versioning, and seven-day Blob/container soft delete.
+Account metrics and Blob diagnostics use the supplied workspace over the public
+Azure Monitor path described in the [security design](../../../../docs/security-controls.md).
+
+Names are derived for global uniqueness. Catalog tags take precedence over
+conflicting `platform`, `environment`, `workload`, and `engine` values.
 
 ## Platform-team commands
 
-Run from the catalog repository root with the pinned Bicep 0.47.16 and Azure CLI
-2.88.0 from `catalog\toolchain.json`. Replace the synthetic resource IDs in a
-platform-owned copy of `main.bicepparam`; never deploy the fixture unchanged.
-`BICEP_EXE` points to the verified local executable.
+Run from the catalog root with Bicep `0.47.16` and Azure CLI `2.88.0`.
+Set `BICEP_EXE` to the local compiler. The checked-in parameters are for
+compilation; before using the Azure commands, replace the resource IDs in a
+private copy and confirm the target resource group.
 
 ```powershell
 $bicep = $env:BICEP_EXE
@@ -50,16 +49,15 @@ az deployment group what-if --resource-group $resourceGroup --template-file 'exa
 az deployment group create --resource-group $resourceGroup --template-file 'examples\platform\storage\bicep\main.generated.json' --parameters '@examples\platform\storage\bicep\parameters.generated.json'
 ```
 
-Review the what-if before the platform-controlled approval/deploy step. Compilation
-does not verify region capacity, RBAC, DNS, endpoint approval or runtime connectivity.
-Validate Entra-authenticated blob access from the private client and reject access
-from a public client without briefly opening the account.
+Review what-if before deployment. Afterwards, check endpoint approval, private
+DNS, Entra-authorized Blob access, and denial from a public client while leaving
+public access disabled. Compilation and contract tests pass; Azure deployment
+and these connectivity checks have not yet been performed.
 
 ## Cleanup
 
-Export required data and retain evidence first. After explicit platform approval,
-delete only the dedicated workload resource group:
+Export any data that must be retained, then review deletion of the workload group:
 `az group delete --name rg-demo-storage-bicep` (interactive confirmation retained).
-This deletes stored data and the workload PE, not the shared VNet/DNS/workspace.
-Do not delete shared resources while other workloads depend on them. Remove the
-two local `*.generated.json` validation artifacts when finished.
+This removes stored data and the workload private endpoint. Keep the shared
+VNet, DNS, and workspace for other workloads. The two local generated JSON files
+can be removed after validation.
