@@ -6,7 +6,15 @@ This catalog shows how a platform team can give application teams a small config
 
 Application teams request an instance through a five-field JSON file in the companion [application repository](https://github.com/mocelj/azure-platform-app-demo). The catalog supplies the networking, identity, monitoring, sizing, and deployment implementation.
 
-Both repositories have public `v0.1.0` releases with passing CI. No Azure deployment has been performed; the connected workflows remain disabled until the deployment environment is configured. The [security design](docs/security-controls.md) covers the choices that would need adapting for a production or regulated environment.
+Both repositories have public `v0.1.0` releases with passing CI. No application workloads have been deployed; the connected workflows remain disabled until the deployment environment is configured. The [security design](docs/security-controls.md) covers the choices that would need adapting for a production or regulated environment.
+
+## Azure Portal preview
+
+The [Web App Template Spec prototype](template-specs/web-app/README.md) packages
+the same AVM composition with a native Azure Portal form. It exposes application
+name and service profile while keeping platform settings fixed. Publication
+creates catalog metadata only; a template-level guard blocks workload deployment
+in the preview version.
 
 ## Start without Azure
 

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json#",
+  "view": {
+    "kind": "Form",
+    "properties": {
+      "title": "Private Web App (UI preview)",
+      "steps": [
+        {
+          "name": "application",
+          "label": "Application",
+          "description": "Choose the application name and service profile.",
+          "elements": [
+            {
+              "name": "previewNotice",
+              "type": "Microsoft.Common.InfoBox",
+              "visible": true,
+              "options": {
+                "style": "Warning",
+                "text": "UI preview only. You can explore these settings, but this Template Spec version blocks workload deployment."
+              }
+            },
+            {
+              "name": "name",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Application name",
+              "defaultValue": "ledger",
+              "toolTip": "Use 3-20 lowercase letters, digits or hyphens, starting with a letter.",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  {
+                    "regex": "^[a-z][a-z0-9-]{2,19}$",
+                    "message": "Enter 3-20 lowercase letters, digits or hyphens, starting with a letter."
+                  }
+                ]
+              }
+            },
+            {
+              "name": "size",
+              "type": "Microsoft.Common.DropDown",
+              "label": "Service profile",
+              "defaultValue": "Small (B1)",
+              "toolTip": "Both profiles use one Linux worker and the same private-access settings.",
+              "multiselect": false,
+              "constraints": {
+                "required": true,
+                "allowedValues": [
+                  {
+                    "label": "Small (B1)",
+                    "description": "One Linux B1 worker",
+                    "value": "small"
+                  },
+                  {
+                    "label": "Medium (B2)",
+                    "description": "One Linux B2 worker",
+                    "value": "medium"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "platform",
+          "label": "Platform settings",
+          "description": "These choices are maintained by the platform team.",
+          "elements": [
+            {
+              "name": "baseline",
+              "type": "Microsoft.Common.InfoBox",
+              "visible": true,
+              "options": {
+                "style": "Info",
+                "text": "Sweden Central. Linux App Service with the Node 24 LTS runtime. Private inbound access, outbound VNet integration, managed identity, HTTPS and TLS 1.2. FTP and basic publishing authentication are disabled."
+              }
+            },
+            {
+              "name": "foundation",
+              "type": "Microsoft.Common.InfoBox",
+              "visible": true,
+              "options": {
+                "style": "Info",
+                "text": "Network, private DNS and monitoring references come from the platform environment. They are not developer inputs. This preview has no foundation bindings; enabling deployment requires a separately reviewed version."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "kind": "ResourceGroup",
+      "resourceGroupId": "__CATALOG_RESOURCE_GROUP_ID__",
+      "location": "swedencentral",
+      "parameters": {
+        "name": "[steps('application').name]",
+        "size": "[steps('application').size]"
+      }
+    }
+  }
+}
