@@ -1,59 +1,64 @@
 # Architecture
 
-The design separates the application team's request from the platform team's infrastructure implementation. The application repository holds configuration; the catalog owns AVM compositions, environment bindings, and deployment workflows. A PR is the interface between the two, so no portal or cross-repository dispatch credential is needed.
+The application repository holds the team's request. The catalog owns the AVM compositions, environment configuration, and deployment workflows. The diagrams below separate three concerns: reviewing a request, deploying it, and managing shared infrastructure.
 
-```mermaid
-flowchart LR
-    Dev[Developer] --> PR[Consumer configuration PR]
-    PR --> Public[Hosted runner: validate only]
-    Pin[Reviewed catalog SHA] --> Public
-    Public --> Review[Maintainer review and merge]
-    Review --> Dispatch[Catalog plan dispatch: exact merged consumer SHA]
-    Dispatch --> Gate[Revalidate JSON, source, target, and main ancestry]
-    Gate --> Planner[Plan on catalog-only private runner: demo-plan]
-    Planner --> Saved[Private plans Blob container and sanitized plan_id]
-    Saved --> PlanReview[Review private result]
-    PlanReview --> Apply[Catalog apply dispatch: same SHA and plan_id]
-    Apply --> Pause[Explicit demo-apply environment approval]
-    Pause --> Runner[Private runner: verify config, catalog, environment hashes]
-    Planner --> OIDC[Entra federated identities]
-    Runner --> OIDC
-    OIDC --> ARM[Azure control plane]
-    Runner --> State[Private Blob backend and protected plan storage]
-    ARM --> AVM[Pinned AVM compositions]
-    AVM --> Targets[Eight independent workload targets]
-```
-
-PR checks run without Azure access. After merge, a maintainer dispatches plan with the consumer's full 40-character SHA, reviews the result, and dispatches apply separately. Apply verifies that the source and environment still match the plan. Both operations require a commit on `main`; merging a PR alone does not start deployment.
-
-## Azure ownership
+## 1. Review the application request
 
 ```mermaid
 flowchart TB
-    Foundation[Bicep-only foundation owner]
-    Foundation --> Network[Shared VNet, subnets, NSGs, private DNS]
-    Foundation --> Identity[Deployment identities and scoped RBAC]
-    Foundation --> Backend[Entra-only private state and plan storage]
-    Foundation --> Logs[Log Analytics workspace]
-    Network --> PE[Private endpoint subnet]
-    Network --> VM[VM workload subnet: no VM public IP]
-    Network --> Web[Separate delegated Web App integration subnet]
-    Network --> CAB[Bicep Container Apps infrastructure subnet]
-    Network --> CAT[Terraform Container Apps infrastructure subnet]
-    PE --> Blob[Blob private endpoint]
-    PE --> Site[Web App site and SCM private endpoint]
-    PE --> CA[Container Apps environment private endpoints]
-    VM --> NAT[NAT: outbound-only public IP]
-    Web --> NAT
-    CAB --> NAT
-    CAT --> NAT
-    NAT --> External[Required registry and service egress]
-    Targets[Workload diagnostics] --> Logs
-    Logs -. public telemetry exception .-> Monitor[Azure Monitor endpoints]
-    Client[Existing private client and runner] --> Network
+    accTitle: Application request and review
+    accDescr: A developer opens a configuration PR. GitHub-hosted checks validate it against the pinned catalog before review and merge.
+    Request["Configuration PR"] --> Check["Validate against catalog"]
+    Check --> Review["Review and merge"]
+    Review --> Commit["Merged consumer commit"]
 ```
 
-The Bicep foundation owns shared networking, DNS, NAT, state storage, identities, and resource groups. Each workload consumes those resource IDs. This makes the foundation available before Terraform backend initialization and prevents the two engines from managing the same shared resources.
+The checks run on a GitHub-hosted runner against the consumer's pinned catalog version. They have no Azure credentials or private-state access. Merging the PR records the requested configuration; it does not start an Azure deployment.
+
+## 2. Plan and deploy from the catalog
+
+```mermaid
+flowchart TB
+    accTitle: Platform deployment process
+    accDescr: A maintainer starts plan, reviews the privately stored result, then starts apply. Environment approval is required before the private runner verifies the inputs and deploys.
+    Start["Start plan workflow"] --> Plan["Private runner: plan"]
+    Plan --> Review["Review saved plan"]
+    Review --> Apply["Start apply workflow"]
+    Apply --> Approval["Approve in demo-apply"]
+    Approval --> Deploy["Private runner: deploy"]
+```
+
+Both workflows run from the catalog and require the consumer's full 40-character commit SHA to be on `main`. The runner reads the request as JSON and uses the catalog's pinned AVM compositions; it does not execute application code.
+
+Plan stores its result in the private Blob container and returns a `plan_id`. The maintainer reviews that result and starts apply with the same consumer SHA and plan ID. After approval in `demo-apply`, the runner checks that the source, configuration and environment still match before deployment.
+
+The private runner authenticates to Azure through Entra federation using OIDC. Terraform state and saved plans stay in private Blob storage. This workflow is documented but remains disabled in the public demo; CI does not exercise an Azure deployment.
+
+## 3. Shared infrastructure and ownership
+
+```mermaid
+flowchart TB
+    accTitle: Shared infrastructure and workload ownership
+    accDescr: The Bicep foundation provides shared network and platform services. Their resource IDs are supplied to independent Bicep and Terraform workloads.
+    Foundation["Bicep foundation"] --> Network["Network and DNS"]
+    Foundation --> Services["Identity, state and logs"]
+    Network --> IDs["Environment resource IDs"]
+    Services --> IDs
+    IDs --> Bicep["Bicep workloads"]
+    IDs --> Terraform["Terraform workloads"]
+```
+
+Arrows here show configuration dependencies, not network traffic. The foundation owns the shared resources; workload deployments consume their IDs.
+
+| Foundation component | What it provides |
+| --- | --- |
+| Network and DNS | VNet, subnets, NSGs, private DNS zones and NAT egress |
+| Identity | Federated deployment identities and scoped RBAC |
+| State and plans | Entra-authorized private Blob storage |
+| Monitoring | Shared Log Analytics workspace |
+| Resource groups | Separate deployment scopes for all eight workload targets |
+
+Creating the foundation first makes the backend available before Terraform initialization. Bicep and Terraform then manage independent workload instances, without sharing ownership of the foundation or each other's resources.
 
 An existing customer foundation can supply the same [environment bindings](foundation.md). In that mode, the catalog references the resources without importing, redeploying, or deleting them. Any required network or access changes remain with the customer's administrators.
 
