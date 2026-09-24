@@ -188,7 +188,7 @@ if ($Mode -eq 'Verify') { Assert-Readback; return }
 $preflightPath = Join-Path $output 'preflight.json'
 if (-not (Test-Path -LiteralPath $preflightPath)) { throw 'Run Preflight and review its result before Publish.' }
 $preflight = Get-Content $preflightPath -Raw | ConvertFrom-Json -AsHashtable
-$age = [DateTimeOffset]::UtcNow - [DateTimeOffset]::Parse($preflight.checkedAt)
+$age = [DateTimeOffset]::UtcNow - [DateTimeOffset]$preflight.checkedAt
 if ($preflight.subscriptionId -ne $SubscriptionId -or $preflight.resourceGroupName -ne $ResourceGroupName -or
     $preflight.location -ne $Location -or $age.TotalHours -gt 24 -or $age.TotalSeconds -lt 0 -or
     $preflight.scopeHash -ne (Get-FileHash (Join-Path $output 'catalog-scope.json') -Algorithm SHA256).Hash) {
